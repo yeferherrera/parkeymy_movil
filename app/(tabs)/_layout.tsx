@@ -1,35 +1,40 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
       <Tabs.Screen
-        name="index"
+        name="home/index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title:'Inicio', 
+          headerTitleAlign: 'center',
+          tabBarIcon: ({ color}) => <FontAwesome size={30} name="home" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
+          <Tabs.Screen
+            name="QR/index"
+            options={{
+              title: 'QR',
+              tabBarIcon: ({ color }) => <FontAwesome size={30} name="qrcode" color={color} />,
+            }}
+          />
+        <Tabs.Screen
+          name="perfil/index"
+          options={{
+            title: 'perfil',
+            tabBarIcon: ({ color }) => <FontAwesome size={30} name="user" color={color} />,
+          }}
+        />
+
+        <Tabs.Screen
+          name="parking/index"
+          options={{
+            title: 'parking',
+            tabBarIcon: ({ color }) => <FontAwesome size={30} name="car" color={color} />,
+          }}
+        />
+        
     </Tabs>
   );
 }
