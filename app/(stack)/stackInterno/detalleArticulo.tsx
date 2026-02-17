@@ -2,6 +2,7 @@ import CustomButton from "@/components/buttons/CustomButton";
 import React from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import AppNav from '../../../components/ui/nav';
+import { router } from "expo-router";
 
 
 export default function DetalleArticuloScreen() {
@@ -97,7 +98,7 @@ export default function DetalleArticuloScreen() {
           <CustomButton
             title="Cerrar"
             icon="exit"
-            onPress={() => {}}
+            onPress={() => router.back()}
           />
         </View>
       </View>

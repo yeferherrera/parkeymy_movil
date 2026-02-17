@@ -3,38 +3,53 @@ import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,          
+        tabBarShowLabel: false,      
+        tabBarActiveTintColor: '#004C97',
+        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarStyle: {
+          height: 64,
+          paddingBottom: 8,
+        },
+      }}
+    >
       <Tabs.Screen
         name="home/index"
         options={{
-          title:'Inicio', 
-          headerTitleAlign: 'center',
-          tabBarIcon: ({ color}) => <FontAwesome size={30} name="home" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={26} color={color} />
+          ),
         }}
       />
-          <Tabs.Screen
-            name="QR/index"
-            options={{
-              title: 'QR',
-              tabBarIcon: ({ color }) => <FontAwesome size={30} name="qrcode" color={color} />,
-            }}
-          />
-        <Tabs.Screen
-          name="perfil/index"
-          options={{
-            title: 'perfil',
-            tabBarIcon: ({ color }) => <FontAwesome size={30} name="user" color={color} />,
-          }}
-        />
 
-        <Tabs.Screen
-          name="parking/index"
-          options={{
-            title: 'parking',
-            tabBarIcon: ({ color }) => <FontAwesome size={30} name="car" color={color} />,
-          }}
-        />
-        
+      <Tabs.Screen
+        name="QR/index"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="qrcode" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="perfil/index"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="user" size={26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="parking/index"
+        options={{
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="car" size={26} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

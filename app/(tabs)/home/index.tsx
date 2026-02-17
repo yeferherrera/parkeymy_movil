@@ -1,109 +1,189 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons"; 
-import WelcomeTitle from '../../../components/welcomeTitle/WelcomeTitle';
-
-
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
-const router = useRouter();
-
-const onPressQR = () => {
-    console.log("QR");
-  };  
-const onPressReports = () => {
-    console.log("mis reportes");
-  };   
-const onPressHelp = () => {
-    console.log("ayuda");
-  };  
 
 
-const homeScreen = () => {
+export default function HomeScreen() {
+  const router = useRouter();
+
   return (
-     <View style={styles.container}>
+    <View style={styles.container}>
 
-    
+      {/* FONDO DE CABECERA */}
 
-      <WelcomeTitle />
+      <View style={styles.headerBackground} />
+      {/* LOGO */}
+      <Image
+        source={require('../../../assets/images/Logo.png')}
+        style={styles.logo}
+      />
 
-      {/* Fila 1 */}
+      {/* BIENVENIDA */}
+     
+      <Text style={styles.welcome}>¡Bienvenido!</Text>
+
+    <View style={styles.content}>
+
+      
+
+      {/* FILA 1 */}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/stackInterno/registrarArticulo')} >
-          <MaterialIcons name="edit" size={30} color="#fff" />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('/stackInterno/registrarArticulo')}
+        >
+          <MaterialIcons name="edit" size={28} color="#fff" />
           <Text style={styles.text}>Registrar artículo</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={onPressQR}>
-          <FontAwesome5 name="qrcode" size={30} color="#fff" />
-          <Text style={styles.text}>Validar QR</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('/stackInterno/generarQR')}
+        >
+          <FontAwesome5 name="qrcode" size={28} color="#fff" />
+          <Text style={styles.text}>Generar QR</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Fila 2 */}
+      {/* FILA 2 */}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.button} onPress={()=> router.push('/stackInterno/consultarRegistros')}>
-          <Ionicons name="search-outline" size={30} color="#fff" />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('/stackInterno/consultarRegistros')}
+        >
+          <Ionicons name="search-outline" size={28} color="#fff" />
           <Text style={styles.text}>Consultar registros</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={()=> router.push('/stackInterno/reportes')}>
-          <MaterialIcons name="list-alt" size={30} color="#fff" />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('/stackInterno/reportes')}
+        >
+          <MaterialIcons name="list-alt" size={28} color="#fff" />
           <Text style={styles.text}>Mis reportes</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Botón de ayuda – centrado */}
-      <TouchableOpacity style={[styles.buttonHelp]} onPress={() => router.push('/stackInterno/ayuda')}>
-        <Ionicons name="help-circle-outline" size={30} color="#fff" />
-        <Text style={styles.text}>Ayuda</Text>
-      </TouchableOpacity>
+      {/* FILA FINAL */}
+      <View style={styles.row}>
+        <TouchableOpacity
+          style={styles.buttonSecondary}
+          onPress={() => router.push('/stackInterno/ayuda')}
+        >
+          <Ionicons name="help-circle-outline" size={26} color="#004C97" />
+          <Text style={styles.textSecondary}>Ayuda</Text>
+        </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.buttonSecondary, styles.logout]}
+          onPress={() => router.replace('/login')}
+        >
+          <MaterialIcons name="logout" size={26} color="#DC2626" />
+          <Text style={[styles.textSecondary, styles.logoutText]}>
+            Cerrar sesión
+          </Text>
+        </TouchableOpacity>
+      </View>
+      </View>
     </View>
-  )
+  );
 }
-
 const styles = StyleSheet.create({
   container: {
-    marginTop: 50,
-    alignItems: "center",
-    
+    flex: 1,
+    backgroundColor: '#F4F6F8',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+
+  content: {
+  marginTop: 80,
+  width: '100%',
+  alignItems: 'center',
+},
+
+
+  headerBackground: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: 230,
+  backgroundColor: '#004C97',
+  borderBottomLeftRadius: 50,
+  borderBottomRightRadius: 50,
+},
+
+
+  logo: {
+    marginTop: 30, 
+    width: 300,
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+
+  welcome: {
+    fontSize: 30,
+  fontWeight: '500',
+  color: '#ffffff',
+  letterSpacing: 0.4,
+
+
   },
 
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "90%",
+    
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
     marginBottom: 15,
   },
 
   button: {
-    backgroundColor: "#004C97", // Azul SENA
-    width: "48%",
+    
+    backgroundColor: '#004C97',
+    width: '48%',
     paddingVertical: 18,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 50,
   },
 
-  buttonHelp: {
-    backgroundColor: "#004C97",
-    width: "60%",
-    paddingVertical: 18,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
+  buttonSecondary: {
+    
+    backgroundColor: '#FFFFFF',
+    width: '48%',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+
+  logout: {
+    borderColor: '#FCA5A5',
   },
 
   text: {
-    marginTop: 8,
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-    textAlign: "center",
+    marginTop: 6,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+
+  textSecondary: {
+    marginTop: 6,
+    color: '#004C97',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  logoutText: {
+    color: '#DC2626',
   },
 });
-
-
-export default homeScreen

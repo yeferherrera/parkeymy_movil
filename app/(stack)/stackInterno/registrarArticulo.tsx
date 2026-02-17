@@ -1,122 +1,148 @@
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import SelectInput from '../../../components/input/selectInput';
-import AppNav from '../../../components/ui/nav';
- 
-import CustomInput from '../../../components/input/customInput';
+import AppNav from "../../../components/ui/nav";
+import CustomInput from "../../../components/input/customInput";
+import SelectInput from "../../../components/input/selectInput";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+} from "react-native";
 
 
-const router = useRouter();
-const [descripcion, setDescripcion] = React.useState('');
-const [identificacion, setIdentificacion] = React.useState('');
-const [tipoArticulo, setTipoArticulo] = React.useState('');
+export default function RegistrarArticuloScreen() {
+  const router = useRouter();
 
+  const [descripcion, setDescripcion] = useState("");
+  const [identificacion, setIdentificacion] = useState("");
+  const [tipoArticulo, setTipoArticulo] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-const registrarArticulo = () => {
+  const registrarArticulo = () => {
+    if (!descripcion || !identificacion || !tipoArticulo) {
+      setError("Por favor complete todos los campos");
+      setSuccess("");
+      return;
+    }
+
+    setError("");
+    setSuccess("Artículo registrado correctamente");
+
+    setTimeout(() => {
+      router.push("/(tabs)/home");
+    }, 1200);
+  };
+
   return (
-    <View style={styles.container}>
-      
-       <AppNav title="Registrar artículo" />
-          
-    
-    <Text style={styles.title}></Text>
+    <View style={{ flex: 1, backgroundColor: "#F4F6F8" }}>
+      {/* NAV FIJO */}
+      <AppNav title="Registrar artículo" />
 
-      {/* Inputs */}
-      <CustomInput
-        label="descripcion"
-        placeholder="descripcion"
-        value={descripcion}
-        onChangeText={setDescripcion}
-        />  
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Card formulario */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Información del artículo</Text>
 
-      <CustomInput
-        label="identificacion"
-        placeholder="identificacion"
-        value={identificacion}
-        onChangeText={setIdentificacion}
-        
-      />
+          <CustomInput
+            label="Descripción"
+            placeholder="Ingrese la descripción"
+            value={descripcion}
+            onChangeText={setDescripcion}
+          />
 
-        <SelectInput 
-        label="Tipo de artículo"
-        selectedValue={tipoArticulo}
-        onValueChange={setTipoArticulo}
-        options={[
-          { label: 'Seleccione una opción', value: '' },
-          { label: 'Electrónico', value: 'electrico' },
-          { label: 'Vehículo', value: 'vehiculo' },
-          { label: 'Personal', value: 'personal' },
-        ]}
-      />
+          <CustomInput
+            label="Identificación"
+            placeholder="Ingrese la identificación"
+            value={identificacion}
+            onChangeText={setIdentificacion}
+          />
 
-      {/* Botón */}
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/(tabs)/home')}>
-        <Text style={styles.buttonText}>confirmar</Text>
-      </TouchableOpacity>
+          <SelectInput
+            label="Tipo de artículo"
+            selectedValue={tipoArticulo}
+            onValueChange={setTipoArticulo}
+            options={[
+              { label: "Seleccione una opción", value: "" },
+              { label: "Electrónico", value: "electrico" },
+              { label: "Vehículo", value: "vehiculo" },
+              { label: "Personal", value: "personal" },
+            ]}
+          />
 
-    {/* mensajes */}
+          {/* Botón responsivo */}
+          <TouchableOpacity
+            style={styles.button}
+            activeOpacity={0.8}
+            onPress={registrarArticulo}
+          >
+            <Text style={styles.buttonText}>Confirmar registro</Text>
+          </TouchableOpacity>
 
-    <Text style={{ color: 'red', marginTop: 40, alignItems: 'center' , textAlign: 'center', height: 90, width: '100%' }}>
-        Error: por favor revise los campos
-    </Text>
-
-    <Text style={{ color: 'green', marginTop: 20 , textAlign: 'center', height: 90, width: '100%' }}>
-        Error: por favor revise los campos
-    </Text>
-     
-
+          {/* Mensajes */}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {success ? <Text style={styles.success}>{success}</Text> : null}
+        </View>
+      </ScrollView>
     </View>
-  )
+  );
 }
 const styles = StyleSheet.create({
-   container: {
-    flex: 1,
-    padding: 25,
-    backgroundColor: '#F4F6F8',
+  scroll: {
+    padding: 16,
+    paddingBottom: 32,
   },
 
-  image:{
-
-    width: 400,
-    height: 150,
-    marginBottom: 20,
-    alignSelf: 'center',
-    marginTop: 50,
-  
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 4,
   },
 
   title: {
-    fontSize: 28,
-    color: '#004C97',
-    fontWeight: '900',
-    textAlign: 'center',
-    marginBottom: 30,
-    marginTop: 40,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#004C97",
+    textAlign: "center",
+    marginBottom: 20,
   },
 
   button: {
-    backgroundColor: '#03c04a',
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
+    backgroundColor: "#03C04A",
+    height: 52,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 18,
   },
 
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
   },
 
-  forgotText: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: '#000',
-    fontSize: 14,
+  error: {
+    color: "#E74C3C",
+    textAlign: "center",
+    marginTop: 16,
+    fontWeight: "600",
   },
 
+  success: {
+    color: "#2ECC71",
+    textAlign: "center",
+    marginTop: 16,
+    fontWeight: "600",
+  },
 });
-
-export default registrarArticulo

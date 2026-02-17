@@ -1,13 +1,14 @@
 import CustomButton from "@/components/buttons/CustomButton";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Image, ScrollView, Text, View } from "react-native";
-import AppNav from '../../../components/ui/nav';
+import { Image, ScrollView, Text, View, Dimensions } from "react-native";
+import AppNav from "../../../components/ui/nav";
 
-const router = useRouter();
-
+const { width } = Dimensions.get("window");
 
 export default function MisArticulosScreen() {
+  const router = useRouter();
+
   const articles = [
     {
       title: "Nombre del artículo 1",
@@ -36,75 +37,147 @@ export default function MisArticulosScreen() {
   ];
 
   return (
+    <View style={{ flex: 1, backgroundColor: "#F4F6F8" }}>
+      {/* NAV FIJO */}
+      <AppNav title="Consultar registros" />
 
-    <ScrollView className="flex-1 bg-[#F4F6F8] p-4">
+      <ScrollView
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 32,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo */}
+        <View style={{ alignItems: "center", marginBottom: 16 }}>
+          <Image
+            source={require("../../../assets/images/Logo.png")}
+            style={{
+              width: width * 0.4,
+              maxWidth: 160,
+              height: 50,
+              resizeMode: "contain",
+            }}
+          />
+        </View>
 
-    
-      {/* Header con logo */}
-       <AppNav title="Consultar registros" />
-
-      <View className="w-full flex-row items-center mb-4">
-    
-        
-
-
-    <View className="flex-1 items-center">
-        <Image
-          source={require('../../../assets/images/Logo.png')}
+        {/* Título */}
+        <Text
           style={{
-            width: 140,
-            height: 50,
-            resizeMode: "contain",
-            shadowColor: "#000",
-            shadowOpacity: 0.15,
-            shadowRadius: 4,
-            shadowOffset: { width: 0, height: 3 },
-            marginBottom: 10,
-            marginTop: 20,
+            fontSize: 22,
+            fontWeight: "700",
+            color: "#004C97",
+            textAlign: "center",
+            marginBottom: 20,
           }}
-        />
-      </View>
+        >
+          Mis artículos
+        </Text>
+
+        {/* Cards */}
+        {articles.map((article, index) => (
+          <View
+            key={index}
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: 20,
+              padding: 18,
+              marginBottom: 16,
+              shadowColor: "#000",
+              shadowOpacity: 0.07,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 5 },
+              elevation: 4,
+            }}
+          >
+            {/* Header card */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 10,
+                gap: 8,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: "#004C97",
+                  flexShrink: 1,
+                }}
+              >
+                {article.title}
+              </Text>
+
+              {/* Estado */}
+              <View
+                style={{
+                  backgroundColor: article.statusColor + "22",
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    color: article.statusColor,
+                    fontSize: 12,
+                    fontWeight: "600",
+                  }}
+                >
+                  {article.status}
+                </Text>
+              </View>
+            </View>
+
+            {/* Info */}
+            <View style={{ gap: 4 }}>
+              <Text style={{ fontSize: 14, color: "#555" }}>
+                Tipo: {article.type}
+              </Text>
+              <Text style={{ fontSize: 14, color: "#555" }}>
+                Fecha registro: {article.date}
+              </Text>
+              <Text style={{ fontSize: 13, color: "#888" }}>
+                ID: {article.id}
+              </Text>
+            </View>
+
+            {/* Botones RESPONSIVOS */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 12,
+                marginTop: 16,
+              }}
+            >
+              <View style={{ flexGrow: 1, minWidth: 140 }}>
+                <CustomButton
+                  title="detalles"
+                  icon="eye"
+                  onPress={() =>
+                    router.push("/stackInterno/detalleArticulo")
+                  }
+                />
+              </View>
+
+              <View style={{ flexGrow: 1, minWidth: 140 }}>
+                <CustomButton
+                  title="Editar"
+                  icon="edit"
+                  onPress={() =>
+                    router.push("/stackInterno/editarArticulo")
+                  }
+                />
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
-      <Text className="text-2xl font-bold mb-4 text-[#004C97] text-center">Mis artículos</Text>
-
-      {articles.map((article, index) => (
-  <View
-    key={index}
-    className="bg-white p-5 rounded-3xl shadow-lg mb-8 border border-gray-300"
-    style={{
-      borderWidth: 1.5,
-      borderColor: "#D0D4D9",
-      shadowColor: "#000",
-      shadowOpacity: 0.12,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 4 },
-      backgroundColor: "#FFFFFF",
-      gap: 6,
-      marginBottom: 10,
-    }}
-  >
-    <Text className="text-lg font-semibold text-[#004C97]">{article.title}</Text>
-
-    <Text className="text-gray-700 text-sm">Tipo: {article.type}</Text>
-    <Text className="text-gray-700 text-sm">Fecha registro: {article.date}</Text>
-    <Text className="text-gray-700 text-sm">ID: {article.id}</Text>
-
-    <Text className="text-sm font-semibold" style={{ color: article.statusColor }}>
-      Estado: {article.status}
-    </Text>
-
-    {/* Botones responsivos y profesionales */}
-    <View className="mt-4 flex-row flex-wrap gap-3">
-      <View className="flex-1 min-w-[130px]">
-        <CustomButton title="Detalles" icon="close" onPress={() => router.push('/stackInterno/detalleArticulo')} />
-      </View>
-
-      <View className="flex-1 min-w-[130px]">
-        <CustomButton title="Editar" icon="edit" onPress={() => router.push('/stackInterno/editarArticulo')} />
-      </View>
-    </View>
-  </View>
-))}
-    </ScrollView>
   );
 }

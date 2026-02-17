@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import AppNav from '../../../components/ui/nav';
 
 
@@ -18,9 +18,10 @@ export default function AyudaYSoporteScreen() {
       {/* Descripción */}
       <Text
         style={{
+          marginTop: 40,
           textAlign: "center",
           color: "#333",
-          fontSize: 15,
+          fontSize: 20,
           marginBottom: 30,
         }}
       >
@@ -84,13 +85,33 @@ export default function AyudaYSoporteScreen() {
           alignItems: "center",
         }}
       >
-        <Text style={{ color: "#666" }}>
-          ¿Necesitas más ayuda?{" "}
-          <Text style={{ color: "#004C97", fontWeight: "700" }}>
-            Contactar soporte
-          </Text>
-        </Text>
+        <Pressable
+  onPress={() =>
+    Alert.alert(
+      'Contacto soporte',
+      'correo: \n'+
+      'yefersonyefersonherrera123@gmail.com \n' +
+      'teléfono: +57 317 684 6802',
+      
+    )
+  }
+>
+  <Text style={{
+  textAlign: "center",
+  marginTop: 30,
+  marginBottom: 15,
+  fontSize: 23,
+  color: '#3b49ca',
+  fontWeight: '600',
+  textDecorationLine: 'underline',
+
+  }}>
+    ¿Necesitas más ayuda? Contáctanos
+  </Text>
+</Pressable>
+
       </View>
     </ScrollView>
   );
 }
+

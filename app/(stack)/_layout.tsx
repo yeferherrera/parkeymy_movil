@@ -5,6 +5,7 @@ export default function StackInternoLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       {/* Aquí vive el layout de tabs */}
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(tabs_vigilante)" />
 
       {/* Pantallas SIN barra inferior */}
       <Stack.Screen name="ayuda" />
