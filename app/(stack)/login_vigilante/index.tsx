@@ -3,12 +3,34 @@ import React, { useState } from 'react';
 import CustomInput from '@/components/input/customInput';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../services/api';
+import * as SecureStore from 'expo-secure-store';
+import { Alert } from 'react-native'; 
 
 export default function LoginVigilante() {
   const router = useRouter();
 
   const [documento, setDocumento] = useState('');
   const [password, setPassword] = useState('');
+
+   const handleLogin = async () => {
+  try {
+    const response = await api.post('/login', {
+      usuario: documento,
+      password: password,
+    });
+
+    const token = response.data.token;
+
+    await SecureStore.setItemAsync('token', token);
+
+    router.replace('/(tabs_vigilante)/home_vigilante');
+
+  } catch (error: any) {
+    console.log(error.response?.data);
+    Alert.alert('Error', 'Credenciales incorrectas');
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -48,9 +70,9 @@ export default function LoginVigilante() {
 
       {/* Botón ingresar */}
       <TouchableOpacity style={styles.button} 
-      onPress={()=> router.replace('../(tabs_vigilante)/home_vigilante')}
+      onPress={handleLogin}
       >
-
+      
         <Text style={styles.buttonText}>Ingresar</Text>
       </TouchableOpacity>
 

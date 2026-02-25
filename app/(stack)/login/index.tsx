@@ -1,13 +1,55 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import React, { useState } from 'react';
 import CustomInput from '../../../components/input/customInput';
 import { useRouter } from 'expo-router';
+import api from '../../services/api';
+import * as SecureStore from 'expo-secure-store';
 
 const LoginScreen = () => {
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      console.log('📡 Intentando login...');
+
+      const response = await api.post('/login', {
+        usuario: usuario,
+        password: password,
+      });
+
+      console.log('✅ LOGIN OK:', response.data);
+
+      const token = response.data.token;
+
+      await SecureStore.setItemAsync('token', token);
+
+      router.replace('/(tabs)/home');
+
+    } catch (error: any) {
+       console.log('❌ ERROR COMPLETO:', error);
+  console.log('❌ ERROR RESPONSE:', error?.response);
+  console.log('❌ ERROR DATA:', error?.response?.data);
+
+  const status = error?.response?.status;
+
+  let mensaje = 'Ocurrió un error inesperado. Intenta de nuevo.';
+
+  if (!error?.response) {
+    mensaje = 'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+  } else if (status === 401) {
+    mensaje = 'Usuario o contraseña incorrectos.';
+  } else if (status === 422) {
+    mensaje = 'Por favor verifica los datos ingresados.';
+  } else if (status === 500) {
+    mensaje = 'Error en el servidor. Intenta más tarde.';
+  }
+
+  Alert.alert('Error al iniciar sesión', mensaje);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -20,10 +62,10 @@ const LoginScreen = () => {
 
       {/* Inputs */}
       <CustomInput
-        label="Correo Electrónico"
-        placeholder="Correo Electrónico"
-        value={email}
-        onChangeText={setEmail}
+        label="Correo institucional"
+        placeholder="Correo institucional"
+        value={usuario}
+        onChangeText={setUsuario}
       />
 
       <CustomInput
@@ -37,7 +79,7 @@ const LoginScreen = () => {
       {/* Botón login principal */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/(tabs)/home')}
+        onPress={handleLogin}
       >
         <Text style={styles.buttonText}>Ingresar</Text>
       </TouchableOpacity>
@@ -64,6 +106,7 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
