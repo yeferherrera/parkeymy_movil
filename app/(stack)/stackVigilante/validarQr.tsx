@@ -1,24 +1,21 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
+import api from '../../services/api';
 
 export default function ValidarQRScreen() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [validando, setValidando] = useState(false);
 
   useEffect(() => {
-    if (!permission) {
-      requestPermission();
-    }
+    if (!permission) requestPermission();
   }, []);
 
-  if (!permission) {
-    return <View />;
-  }
+  if (!permission) return <View />;
 
   if (!permission.granted) {
     return (
@@ -33,23 +30,51 @@ export default function ValidarQRScreen() {
     );
   }
 
-  const handleBarCodeScanned = ({ data }: any) => {
+  const handleBarCodeScanned = async ({ data }: any) => {
+    if (scanned || validando) return;
     setScanned(true);
+    setValidando(true);
 
-    Alert.alert(
-      'QR escaneado',
-      `Contenido:\n${data}`,
-      [
+    try {
+      const response = await api.get(`/validar-qr/${data}`);
+      const tipo = response.data.tipo;
+
+      Alert.alert(
+        tipo === 'ingreso' ? '✅ Ingreso registrado' : '✅ Salida registrada',
+        response.data.message,
+        [
+          {
+            text: 'Escanear otro',
+            onPress: () => {
+              setScanned(false);
+              setValidando(false);
+            },
+          },
+          {
+            text: 'Cerrar',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || 'QR inválido o expirado';
+
+      Alert.alert('❌ Error', msg, [
         {
-          text: 'Escanear otro',
-          onPress: () => setScanned(false),
+          text: 'Intentar de nuevo',
+          onPress: () => {
+            setScanned(false);
+            setValidando(false);
+          },
         },
         {
-          text: 'Aceptar',
+          text: 'Cerrar',
           onPress: () => router.back(),
         },
-      ]
-    );
+      ]);
+    } finally {
+      setValidando(false);
+    }
   };
 
   return (
@@ -67,25 +92,39 @@ export default function ValidarQRScreen() {
       <CameraView
         style={styles.camera}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ['qr'],
-        }}
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
       />
 
-      {/* INDICACIÓN */}
+      {/* OVERLAY DE CARGA */}
+      {validando && (
+        <View style={styles.overlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.overlayText}>Validando QR...</Text>
+        </View>
+      )}
+
+      {/* MARCO DEL QR */}
+      <View style={styles.marcoContainer} pointerEvents="none">
+        <View style={styles.marco}>
+          <View style={[styles.esquina, styles.esquinaTL]} />
+          <View style={[styles.esquina, styles.esquinaTR]} />
+          <View style={[styles.esquina, styles.esquinaBL]} />
+          <View style={[styles.esquina, styles.esquinaBR]} />
+        </View>
+      </View>
+
+      {/* FOOTER */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          Alinea el código QR dentro del marco
+          {validando ? 'Validando...' : 'Alinea el código QR dentro del marco'}
         </Text>
       </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
 
   header: {
     height: 90,
@@ -97,15 +136,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '600' },
+
+  camera: { flex: 1 },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
   },
 
-  camera: {
-    flex: 1,
+  overlayText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  marcoContainer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 90,
   },
+
+  marco: {
+    width: 240,
+    height: 240,
+    position: 'relative',
+  },
+
+  esquina: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderColor: '#fff',
+  },
+
+  esquinaTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3 },
+  esquinaTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3 },
+  esquinaBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3 },
+  esquinaBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3 },
 
   footer: {
     position: 'absolute',
@@ -117,10 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  footerText: {
-    color: '#fff',
-    fontSize: 14,
-  },
+  footerText: { color: '#fff', fontSize: 14 },
 
   center: {
     flex: 1,
@@ -130,11 +195,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-  text: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
+  text: { fontSize: 16, textAlign: 'center', marginBottom: 16 },
 
   button: {
     backgroundColor: '#004C97',
@@ -143,8 +204,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+  buttonText: { color: '#fff', fontWeight: '600' },
 });

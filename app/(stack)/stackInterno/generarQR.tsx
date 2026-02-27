@@ -1,31 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  FlatList, ActivityIndicator, Alert, Image
+  FlatList, ActivityIndicator, Alert
 } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import AppNav from '@/components/ui/nav';
 import api from '../../services/api';
 import { SvgUri } from 'react-native-svg';
 
+type Modo = 'ingreso' | 'salida';
+
 export default function GenerarQRScreen() {
+  const [modo, setModo] = useState<Modo>('ingreso');
   const [articulos, setArticulos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generando, setGenerando] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [tipoQrGenerado, setTipoQrGenerado] = useState<Modo>('ingreso');
 
   useEffect(() => {
     fetchArticulos();
   }, []);
 
   const fetchArticulos = async () => {
+    setLoading(true);
     try {
       const response = await api.get('/mis-articulos');
-      // Solo articulos que pueden ingresar (registrado o retirado)
-      const aptos = response.data
-        .filter((a: any) => ['registrado', 'retirado'].includes(a.estado_articulo))
-        .map((a: any) => ({ ...a, selected: false }));
-      setArticulos(aptos);
+      setArticulos(response.data.map((a: any) => ({ ...a, selected: false })));
     } catch (error) {
       Alert.alert('Error', 'No se pudieron cargar los artículos');
     } finally {
@@ -33,29 +34,40 @@ export default function GenerarQRScreen() {
     }
   };
 
+  // Filtra según el modo activo
+  const articulosFiltrados = articulos.filter(a =>
+    modo === 'ingreso'
+      ? ['registrado', 'retirado'].includes(a.estado_articulo)
+      : a.estado_articulo === 'en_sede'
+  ).map(a => ({ ...a }));
+
+  // Mantener selección por ID
+  const [seleccionIds, setSeleccionIds] = useState<number[]>([]);
+
   const toggleArticulo = (id: number) => {
-    setArticulos(prev =>
-      prev.map(item =>
-        item.id_articulo === id
-          ? { ...item, selected: !item.selected }
-          : item
-      )
+    setSeleccionIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
-  const seleccionados = articulos.filter(a => a.selected);
+  const cambiarModo = (nuevoModo: Modo) => {
+    setModo(nuevoModo);
+    setSeleccionIds([]);
+    setQrUrl(null);
+  };
 
   const generarQR = async () => {
-    if (seleccionados.length === 0) return;
+    if (seleccionIds.length === 0) return;
 
     setGenerando(true);
     setQrUrl(null);
     try {
       const response = await api.post('/generar-qr', {
-        articulos: seleccionados.map(a => a.id_articulo),
-        tipo_movimiento: 'ingreso',
+        articulos: seleccionIds,
+        tipo_movimiento: modo,
       });
 
+      setTipoQrGenerado(modo);
       setQrUrl(response.data.qr_url);
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'No se pudo generar el QR';
@@ -63,6 +75,12 @@ export default function GenerarQRScreen() {
     } finally {
       setGenerando(false);
     }
+  };
+
+  const resetear = () => {
+    setQrUrl(null);
+    setSeleccionIds([]);
+    fetchArticulos();
   };
 
   if (loading) {
@@ -77,68 +95,109 @@ export default function GenerarQRScreen() {
     <View style={styles.container}>
       <AppNav title="" />
 
+      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Generar código QR</Text>
         <Text style={styles.headerSubtitle}>
-          Selecciona los artículos que vas a ingresar
+          {modo === 'ingreso'
+            ? 'Selecciona los artículos que vas a ingresar'
+            : 'Selecciona los artículos que vas a retirar'}
         </Text>
+
+        {/* SELECTOR INGRESO / SALIDA */}
+        {!qrUrl && (
+          <View style={styles.toggle}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, modo === 'ingreso' && styles.toggleActive]}
+              onPress={() => cambiarModo('ingreso')}
+            >
+              <Ionicons name="enter-outline" size={16} color={modo === 'ingreso' ? '#fff' : '#93C5FD'} />
+              <Text style={[styles.toggleText, modo === 'ingreso' && styles.toggleTextActive]}>
+                Ingreso
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toggleBtn, modo === 'salida' && styles.toggleActiveSalida]}
+              onPress={() => cambiarModo('salida')}
+            >
+              <Ionicons name="exit-outline" size={16} color={modo === 'salida' ? '#fff' : '#93C5FD'} />
+              <Text style={[styles.toggleText, modo === 'salida' && styles.toggleTextActive]}>
+                Salida
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      {/* QR generado */}
+      {/* QR GENERADO */}
       {qrUrl && (
         <View style={styles.qrContainer}>
+          <View style={[styles.qrBadge, tipoQrGenerado === 'ingreso' ? styles.qrBadgeIngreso : styles.qrBadgeSalida]}>
+            <Text style={styles.qrBadgeText}>
+              {tipoQrGenerado === 'ingreso' ? '↓ QR de Ingreso' : '↑ QR de Salida'}
+            </Text>
+          </View>
           <Text style={styles.qrLabel}>¡QR generado! Muéstraselo al vigilante</Text>
-          <SvgUri
-            width={260}
-            height={260}
-            uri={qrUrl}
-          />
-          <Text style={styles.qrExpira}>Expira en 2 horas</Text>
+          <SvgUri width={260} height={260} uri={qrUrl} />
+          <Text style={styles.qrExpira}>⏱ Expira en 2 horas</Text>
         </View>
       )}
 
-      {/* Lista de artículos */}
+      {/* LISTA DE ARTÍCULOS */}
       {!qrUrl && (
         <>
-          {articulos.length === 0 ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: '#888', fontSize: 15 }}>
-                No tienes artículos disponibles para ingresar
+          {articulosFiltrados.length === 0 ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+              <FontAwesome5 name="box-open" size={40} color="#D1D5DB" />
+              <Text style={{ color: '#888', fontSize: 15, marginTop: 16, textAlign: 'center' }}>
+                {modo === 'ingreso'
+                  ? 'No tienes artículos disponibles para ingresar'
+                  : 'No tienes artículos dentro del complejo para retirar'}
               </Text>
             </View>
           ) : (
             <FlatList
-              data={articulos}
+              data={articulosFiltrados}
               keyExtractor={(item) => String(item.id_articulo)}
               contentContainerStyle={{ padding: 20 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.card, item.selected && styles.cardSelected]}
-                  onPress={() => toggleArticulo(item.id_articulo)}
-                  activeOpacity={0.8}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.cardText}>{item.nombre_articulo}</Text>
-                    <Text style={styles.cardSub}>
-                      {item.marca} — {item.modelo}
-                    </Text>
-                  </View>
-                  {item.selected && (
-                    <Ionicons name="checkmark-circle" size={24} color="#16A34A" />
-                  )}
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const isSelected = seleccionIds.includes(item.id_articulo);
+                return (
+                  <TouchableOpacity
+                    style={[styles.card, isSelected && (modo === 'ingreso' ? styles.cardSelected : styles.cardSelectedSalida)]}
+                    onPress={() => toggleArticulo(item.id_articulo)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.cardText}>{item.nombre_articulo}</Text>
+                      <Text style={styles.cardSub}>{item.marca} — {item.modelo}</Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color={modo === 'ingreso' ? '#16A34A' : '#E74C3C'}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           )}
 
           <View style={styles.footer}>
             <Text style={styles.counter}>
-              Artículos seleccionados: {seleccionados.length}
+              Artículos seleccionados: {seleccionIds.length}
             </Text>
 
             <TouchableOpacity
-              style={[styles.qrButton, (seleccionados.length === 0 || generando) && styles.qrDisabled]}
-              disabled={seleccionados.length === 0 || generando}
+              style={[
+                styles.qrButton,
+                modo === 'salida' && styles.qrButtonSalida,
+                (seleccionIds.length === 0 || generando) && styles.qrDisabled
+              ]}
+              disabled={seleccionIds.length === 0 || generando}
               onPress={generarQR}
             >
               {generando ? (
@@ -146,7 +205,9 @@ export default function GenerarQRScreen() {
               ) : (
                 <>
                   <FontAwesome5 name="qrcode" size={24} color="#fff" />
-                  <Text style={styles.qrText}>Generar QR de ingreso</Text>
+                  <Text style={styles.qrText}>
+                    {modo === 'ingreso' ? 'Generar QR de ingreso' : 'Generar QR de salida'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -154,16 +215,10 @@ export default function GenerarQRScreen() {
         </>
       )}
 
-      {/* Botón para generar otro QR */}
+      {/* BOTÓN GENERAR OTRO */}
       {qrUrl && (
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.qrButton}
-            onPress={() => {
-              setQrUrl(null);
-              setArticulos(prev => prev.map(a => ({ ...a, selected: false })));
-            }}
-          >
+          <TouchableOpacity style={styles.qrButton} onPress={resetear}>
             <Text style={styles.qrText}>Generar otro QR</Text>
           </TouchableOpacity>
         </View>
@@ -178,14 +233,39 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#004C97',
     paddingTop: 2,
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
   },
 
-  headerTitle: { textAlign: "center", color: '#fff', fontSize: 22 },
-  headerSubtitle: { textAlign: "center", color: '#E0E7FF', marginTop: 10, fontSize: 14 },
+  headerTitle: { textAlign: 'center', color: '#fff', fontSize: 22 },
+  headerSubtitle: { textAlign: 'center', color: '#E0E7FF', marginTop: 6, fontSize: 14 },
+
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    marginTop: 16,
+    padding: 4,
+    gap: 4,
+  },
+
+  toggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+
+  toggleActive: { backgroundColor: '#16A34A' },
+  toggleActiveSalida: { backgroundColor: '#E74C3C' },
+
+  toggleText: { color: '#93C5FD', fontWeight: '600', fontSize: 14 },
+  toggleTextActive: { color: '#fff' },
 
   card: {
     backgroundColor: '#fff',
@@ -199,6 +279,7 @@ const styles = StyleSheet.create({
   },
 
   cardSelected: { borderWidth: 1.5, borderColor: '#16A34A' },
+  cardSelectedSalida: { borderWidth: 1.5, borderColor: '#E74C3C' },
   cardText: { fontSize: 16, fontWeight: '600', color: '#111827' },
   cardSub: { fontSize: 13, color: '#888', marginTop: 3 },
 
@@ -222,6 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
 
+  qrButtonSalida: { backgroundColor: '#E74C3C' },
   qrDisabled: { backgroundColor: '#9CA3AF' },
   qrText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
@@ -232,21 +314,24 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
+  qrBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 99,
+    marginBottom: 14,
+  },
+
+  qrBadgeIngreso: { backgroundColor: '#D1FAE5' },
+  qrBadgeSalida: { backgroundColor: '#FEE2E2' },
+
+  qrBadgeText: { fontWeight: '700', fontSize: 14, color: '#111' },
+
   qrLabel: {
     fontSize: 16,
     fontWeight: '700',
     color: '#004C97',
     textAlign: 'center',
     marginBottom: 20,
-  },
-
-  qrImage: {
-    width: 260,
-    height: 260,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#D0D4D9',
   },
 
   qrExpira: {

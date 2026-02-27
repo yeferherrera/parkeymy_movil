@@ -1,6 +1,7 @@
 import React from "react";
 import { Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import AppNav from '../../../components/ui/nav';
+import { router } from "expo-router";
 
 
 
@@ -30,7 +31,7 @@ export default function AyudaYSoporteScreen() {
       </Text>
 
       {/* Botón: Ver historial */}
-      <TouchableOpacity
+      <TouchableOpacity onPress={() => router.push('/stackInterno/historial')}
         style={{
           backgroundColor: "#EEF5FF",
           borderColor: "#004C97",
