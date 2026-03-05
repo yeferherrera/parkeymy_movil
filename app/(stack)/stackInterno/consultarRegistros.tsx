@@ -59,7 +59,7 @@ export default function MisArticulosScreen() {
         <View style={{ alignItems: "center", marginBottom: 16 }}>
           <Image
             source={require("../../../assets/images/Logo.png")}
-            style={{ width: width * 0.4, maxWidth: 160, height: 50, resizeMode: "contain" }}
+            style={{ width: width * 0.8, maxWidth: 200, height: 50, resizeMode: "contain" }}
           />
         </View>
 

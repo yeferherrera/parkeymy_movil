@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import CustomInput from '@/components/input/customInput';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../services/api';
+import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native'; 
 
@@ -13,21 +13,36 @@ export default function LoginVigilante() {
   const [documento, setDocumento] = useState('');
   const [password, setPassword] = useState('');
 
-   const handleLogin = async () => {
+  const handleLogin = async () => {
   try {
-    const response = await api.post('/login', {
-      usuario: documento,
-      password: password,
-    });
+    const usuarioLimpio = documento.trim();
+    const passwordLimpio = password.trim();
 
+    const response = await api.post('/login', {
+      usuario: usuarioLimpio,
+      password: passwordLimpio,
+    });
+console.log("Enviando login...");
     const token = response.data.token;
+    const user = response.data.usuario;
 
     await SecureStore.setItemAsync('token', token);
+    await SecureStore.setItemAsync('user', JSON.stringify(user));
 
-    router.replace('/(tabs_vigilante)/home_vigilante');
+    const rol = Number(user.id_rol);
+    console.log("ROL DETECTADO:", rol);
+
+    if (rol === 3) {
+      router.replace('/(stack)/(tabs_vigilante)/home_vigilante');
+    } else {
+      Alert.alert('Acceso denegado', 'Este acceso es solo para vigilantes');
+    }
 
   } catch (error: any) {
-    console.log(error.response?.data);
+    console.log("ERROR COMPLETO:", error);
+    console.log("ERROR RESPONSE:", error?.response?.data);
+    console.log("ERROR STATUS:", error?.response?.status);
+
     Alert.alert('Error', 'Credenciales incorrectas');
   }
 };
@@ -37,7 +52,7 @@ export default function LoginVigilante() {
 
 
       <Image
-              source={require('../../../assets/images/Logo.png')}
+              source={require('../../assets/images/Logo.png')}
               style={styles.image}
             />          
 

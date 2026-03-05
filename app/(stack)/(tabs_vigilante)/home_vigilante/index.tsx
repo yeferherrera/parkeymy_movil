@@ -1,19 +1,54 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import ActionCard from '../../../components/card/ActionCard';
+import { useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import ActionCard from '../../../../components/card/ActionCard';
+import api from '../../../services/api';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 2;
 
 export default function HomeVigilante() {
   const router = useRouter();
-  const nombreVigilante = 'Carlos Pérez';
+  const [usuario, setUsuario] = useState<any>(null);
+
+  useEffect(() => {
+    fetchPerfil();
+  }, []);
+
+  const fetchPerfil = async () => {
+    try {
+      const response = await api.get('/perfil');
+      setUsuario(response.data.usuario);
+    } catch (error) {
+      console.log('Error cargando perfil vigilante');
+    }
+  };
+
+  const cerrarSesion = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try { await api.post('/logout'); } catch (_) {}
+            await SecureStore.deleteItemAsync('token');
+            router.replace('/login');
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
 
-      {/* HEADER VISUAL */}
+      {/* HEADER */}
       <View style={styles.headerBackground} />
 
       {/* LOGO */}
@@ -24,41 +59,44 @@ export default function HomeVigilante() {
 
       {/* BIENVENIDA */}
       <Text style={styles.welcome}>Bienvenido</Text>
-      <Text style={styles.name}>{nombreVigilante}</Text>
-      <Text style={styles.role}>Vigilante</Text>
+      <Text style={styles.name}>
+        {usuario ? `${usuario.nombres} ${usuario.apellidos}` : '...'}
+      </Text>
+      <Text style={styles.role}>
+        {usuario?.rol?.nombre_rol || 'Vigilante'}
+      </Text>
 
       {/* BOTÓN PRINCIPAL */}
       <TouchableOpacity
         style={styles.mainAction}
-        onPress={() => router.push('/stackVigilante/validarQr')}
+        onPress={() => router.push('/(stack)/(tabs_vigilante)/validarQr')}
         activeOpacity={0.85}
       >
         <FontAwesome5 name="qrcode" size={32} color="#FFFFFF" />
         <Text style={styles.mainActionText}>Validar código QR</Text>
       </TouchableOpacity>
 
-
       {/* GRID DE ACCIONES */}
       <View style={styles.grid}>
 
-        <ActionCard
+        <ActionCard 
           icon="clipboard-list"
           label="Reportes"
-          onPress={() => router.push('/(tabs_vigilante)/reportes')}
+          onPress={() => router.push('/(stack)/(tabs_vigilante)/reportes_vigilante')}
           style={{ width: CARD_WIDTH }}
         />
 
         <ActionCard
           icon="history"
-          label="Historial"
-          onPress={() => router.push('/(tabs_vigilante)/historial')}
+          label="Artículos fuera"
+          onPress={() => router.push('/(stack)/stackVigilante/articulosFuera')}
           style={{ width: CARD_WIDTH }}
         />
 
         <ActionCard
           icon="question-circle"
           label="Ayuda"
-          onPress={() => router.push('/(tabs_vigilante)/ayuda')}
+          onPress={() => router.push('/(stack)/stackVigilante/ayuda')}
           style={{ width: CARD_WIDTH }}
         />
 
@@ -66,7 +104,7 @@ export default function HomeVigilante() {
           icon="sign-out-alt"
           label="Cerrar sesión"
           danger
-          onPress={() => router.replace('/login')}
+          onPress={cerrarSesion}
           style={{ width: CARD_WIDTH }}
         />
 
@@ -74,6 +112,7 @@ export default function HomeVigilante() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -131,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 28,
-    },
+  },
 
   mainActionText: {
     color: '#FFFFFF',

@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as SecureStore from "expo-secure-store";
 
 interface AppNavProps {
   title: string;
@@ -10,30 +11,58 @@ interface AppNavProps {
 export default function AppNav({ title }: AppNavProps) {
   const router = useRouter();
 
+  const handleBack = async () => {
+    // Si hay pantallas anteriores simplemente regresa
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    // Si no hay historial, busca el rol en SecureStore
+    try {
+      const userData = await SecureStore.getItemAsync("user");
+      const parsed = userData ? JSON.parse(userData) : null;
+      const rol = Number(parsed?.id_rol);
+
+      console.log("ROL DETECTADO:", rol);
+
+      if (rol === 3) {
+        router.replace("/(stack)/(tabs_vigilante)/home_vigilante");
+        return;
+      }
+
+      router.replace("/(stack)/(tabs)/home");
+
+    } catch (error) {
+      console.log("Error leyendo usuario:", error);
+      router.replace("/login");
+    }
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.container}>
-        
-        {/* Botón volver */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
+        <Pressable
+          onPress={handleBack}
+          android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && { transform: [{ scale: 0.92 }] },
+          ]}
         >
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </Pressable>
 
-        {/* Título */}
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
 
-        {/* Placeholder para balancear el centro */}
         <View style={styles.backButton} />
       </View>
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   safe: {
     backgroundColor: "#004C97",
@@ -44,18 +73,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-
-    // sombra iOS
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 3 },
-
-    // sombra Android
     elevation: 6,
   },
   backButton: {
-    width: 40,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },

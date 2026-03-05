@@ -1,52 +1,51 @@
 import React, { useState } from "react";
 import { Modal, Linking, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import AppNav from '../../../components/ui/nav';
+import AppNav from '@/components/ui/nav';
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 const faqs = [
   {
-    pregunta: '¿Cómo registro un artículo?',
-    respuesta: 'Ve a "Mis artículos" y toca el botón "+". Llena los campos requeridos y confirma el registro.'
-  },
-  {
-    pregunta: '¿Cómo genero un QR de ingreso?',
-    respuesta: 'Ve a la pestaña "Mi QR", selecciona los artículos que vas a ingresar y toca "Generar QR de ingreso".'
-  },
-  {
-    pregunta: '¿Cuánto tiempo dura el QR?',
-    respuesta: 'El QR expira en 2 horas desde su generación. Si expira, debes generar uno nuevo.'
+    pregunta: '¿Qué hago si el QR no escanea?',
+    respuesta: 'Pide al aprendiz que genere un nuevo QR. Los QR expiran después de cierto tiempo y solo pueden usarse una vez.'
   },
   {
     pregunta: '¿Qué significa cada estado de artículo?',
-    respuesta: 'Registrado: aún no ha ingresado. En sede: está dentro del complejo. Retirado: salió del complejo.'
+    respuesta: 'Registrado: aún no ha ingresado al complejo. En sede: está dentro del complejo. Retirado: salió del complejo.'
   },
   {
-    pregunta: '¿Puedo editar un artículo que ya ingresó?',
-    respuesta: 'No. Solo puedes editar artículos en estado "Registrado". Si está en sede debes esperar a retirarlo.'
+    pregunta: '¿Qué hago si el QR dice "inválido"?',
+    respuesta: 'El QR puede estar expirado o ya fue usado. Pide al aprendiz que genere uno nuevo desde su app.'
   },
   {
-    pregunta: '¿Cómo hago el QR de salida?',
-    respuesta: 'Ve a "Mi QR", cambia el modo a "Salida", selecciona los artículos que están en sede y genera el QR.'
+    pregunta: '¿Puedo validar el mismo QR dos veces?',
+    respuesta: 'No. Cada QR solo puede ser usado una vez. Después de validarlo queda marcado como usado automáticamente.'
+  },
+  {
+    pregunta: '¿Cómo sé si es un QR de ingreso o salida?',
+    respuesta: 'Al escanear el QR la app te muestra una pantalla de confirmación indicando claramente si es ingreso o salida antes de registrar.'
+  },
+  {
+    pregunta: '¿Qué pasa si confirmo un movimiento por error?',
+    respuesta: 'Comunícate con el administrador del sistema para que pueda corregir el movimiento manualmente.'
   },
 ];
 
-export default function AyudaYSoporteScreen() {
+export default function AyudaVigilanteScreen() {
   const [expandido, setExpandido] = useState<number | null>(null);
-  const [modalContacto, setModalContacto] = useState(false); // 👈 nuevo estado
+  const [modalContacto, setModalContacto] = useState(false);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F4F6F8' }}>
       <AppNav title="Ayuda" />
 
-      {/* ── MODAL DE CONTACTO ── */}
+      {/* MODAL DE CONTACTO */}
       <Modal
         visible={modalContacto}
         transparent
         animationType="fade"
         onRequestClose={() => setModalContacto(false)}
       >
-        {/* Fondo oscuro */}
         <Pressable
           style={{
             flex: 1,
@@ -57,7 +56,6 @@ export default function AyudaYSoporteScreen() {
           }}
           onPress={() => setModalContacto(false)}
         >
-          {/* Tarjeta — stopPropagation para que no cierre al tocar adentro */}
           <Pressable
             onPress={(e) => e.stopPropagation()}
             style={{
@@ -86,7 +84,6 @@ export default function AyudaYSoporteScreen() {
               <Ionicons name="headset-outline" size={32} color="#004C97" />
             </View>
 
-            {/* Título */}
             <Text style={{
               fontSize: 20,
               fontWeight: '800',
@@ -174,7 +171,6 @@ export default function AyudaYSoporteScreen() {
               <Ionicons name="open-outline" size={16} color="#9CA3AF" />
             </TouchableOpacity>
 
-            {/* Botón cerrar */}
             <TouchableOpacity
               onPress={() => setModalContacto(false)}
               style={{
@@ -184,9 +180,7 @@ export default function AyudaYSoporteScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-                Cerrar
-              </Text>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Cerrar</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -206,7 +200,7 @@ export default function AyudaYSoporteScreen() {
           Ayuda y soporte
         </Text>
         <Text style={{ textAlign: 'center', color: '#E0E7FF', marginTop: 6, fontSize: 14 }}>
-          Todo lo que necesitas saber
+          Todo lo que necesitas como vigilante
         </Text>
       </View>
 
@@ -219,7 +213,24 @@ export default function AyudaYSoporteScreen() {
 
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
           <TouchableOpacity
-            onPress={() => router.push('/stackInterno/historial')}
+            onPress={() => router.push('/(stack)/stackVigilante/escanearQr')}
+            style={{
+              flex: 1,
+              backgroundColor: '#D1FAE5',
+              borderColor: '#16A34A',
+              borderWidth: 1.5,
+              paddingVertical: 18,
+              borderRadius: 16,
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Ionicons name="qr-code-outline" size={28} color="#16A34A" />
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#16A34A' }}>Escanear QR</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(stack)/stackVigilante/articulosFuera')}
             style={{
               flex: 1,
               backgroundColor: '#EEF5FF',
@@ -231,24 +242,8 @@ export default function AyudaYSoporteScreen() {
               gap: 8,
             }}
           >
-            <Ionicons name="time-outline" size={28} color="#004C97" />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#004C97' }}>Ver historial</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: '#FFF9E6',
-              borderColor: '#F1C40F',
-              borderWidth: 1.5,
-              paddingVertical: 18,
-              borderRadius: 16,
-              alignItems: 'center',
-              gap: 8,
-            }}
-          onPress={() => router.push('/stackInterno/notificaciones')}>
-            <Ionicons name="notifications-outline" size={28} color="#C79600" />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#C79600' }}>Notificaciones</Text>
+            <Ionicons name="cube-outline" size={28} color="#004C97" />
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#004C97' }}>Artículos fuera</Text>
           </TouchableOpacity>
         </View>
 
@@ -269,10 +264,10 @@ export default function AyudaYSoporteScreen() {
           shadowOffset: { width: 0, height: 3 },
         }}>
           {[
-            { icon: 'add-circle-outline', color: '#16A34A', texto: 'Registra tus artículos desde "Mis artículos"' },
-            { icon: 'qr-code-outline', color: '#004C97', texto: 'Genera un QR antes de entrar al complejo' },
-            { icon: 'shield-checkmark-outline', color: '#F39C12', texto: 'Muéstrale el QR al vigilante en la entrada' },
-            { icon: 'exit-outline', color: '#E74C3C', texto: 'Al salir genera un QR de salida' },
+            { icon: 'qr-code-outline', color: '#16A34A', texto: 'Toca "Escanear QR" para abrir la cámara' },
+            { icon: 'eye-outline', color: '#004C97', texto: 'Revisa los artículos del movimiento antes de confirmar' },
+            { icon: 'checkmark-circle-outline', color: '#F39C12', texto: 'Confirma el ingreso o salida según corresponda' },
+            { icon: 'shield-checkmark-outline', color: '#E74C3C', texto: 'El sistema actualiza los estados automáticamente' },
           ].map((item, i) => (
             <View key={i} style={{
               flexDirection: 'row',

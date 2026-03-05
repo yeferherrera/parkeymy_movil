@@ -1,196 +1,324 @@
-import React from "react";
+import React, { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import AppNav from "../../../components/ui/nav";
+  View, Text, StyleSheet, FlatList,
+  TouchableOpacity, ActivityIndicator,
+  Alert, RefreshControl
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useFocusEffect } from 'expo-router';
+import AppNav from '@/components/ui/nav';
+import api from '@/app/services/api';
 
-export default function MisReportes() {
+interface Reporte {
+  id_reporte: number;
+  tipo_reporte: string;
+  titulo: string;
+  descripcion: string;
+  estado: string;
+  respuesta: string | null;
+  fecha_reporte: string;
+  fecha_respuesta: string | null;
+  respondido_por: any;
+}
+
+const tipoConfig: Record<string, { icon: string; color: string; bg: string; label: string }> = {
+  daño_articulo:     { icon: 'construct-outline',   color: '#D97706', bg: '#FEF3C7', label: 'Daño en artículo' },
+  perdida_articulo:  { icon: 'alert-circle-outline', color: '#E74C3C', bg: '#FEE2E2', label: 'Pérdida de artículo' },
+  incidente_sede:    { icon: 'warning-outline',      color: '#7C3AED', bg: '#F5F3FF', label: 'Incidente en sede' },
+};
+
+const estadoConfig: Record<string, { color: string; bg: string; label: string }> = {
+  pendiente:    { color: '#D97706', bg: '#FEF3C7', label: 'Pendiente' },
+  en_revision:  { color: '#004C97', bg: '#EFF6FF', label: 'En revisión' },
+  resuelto:     { color: '#16A34A', bg: '#D1FAE5', label: 'Resuelto' },
+};
+
+export default function MisReportesScreen() {
   const router = useRouter();
+  const [reportes, setReportes] = useState<Reporte[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [expandido, setExpandido] = useState<number | null>(null);
 
-  const reportes = [
-    {
-      id: "1",
-      titulo: "Reporte de artículo electrónico",
-      fecha: "10/01/2026",
-      estado: "Enviado",
-    },
-    {
-      id: "2",
-      titulo: "Reporte de vehículo",
-      fecha: "05/01/2026",
-      estado: "Pendiente",
-    },
-  ];
+  useFocusEffect(
+    useCallback(() => {
+      fetchReportes();
+    }, [])
+  );
 
-  const renderItem = ({ item }: any) => {
-    const enviado = item.estado === "Enviado";
+  const fetchReportes = async () => {
+    try {
+      const res = await api.get('/mis-reportes');
+      setReportes(res.data);
+    } catch {
+      Alert.alert('Error', 'No se pudieron cargar los reportes');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString('es-CO', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  };
+
+  if (loading) {
     return (
-      <View style={styles.card}>
-        {/* Icono */}
-        <View style={styles.iconBox}>
-          <FontAwesome name="file-text" size={22} color="#004C97" />
-        </View>
-
-        {/* Info */}
-        <View style={styles.cardInfo}>
-          <Text style={styles.title} numberOfLines={2}>
-            {item.titulo}
-          </Text>
-          <Text style={styles.date}>Fecha: {item.fecha}</Text>
-        </View>
-
-        {/* Estado */}
-        <View
-          style={[
-            styles.statusBadge,
-            enviado ? styles.sentBg : styles.pendingBg,
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusText,
-              enviado ? styles.sentText : styles.pendingText,
-            ]}
-          >
-            {item.estado}
-          </Text>
+      <View style={styles.container}>
+        <AppNav title="Mis reportes" />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#004C97" />
         </View>
       </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
-      {/* NAV FIJO */}
-      <AppNav title="Mis reportes" />
+      <AppNav title="" />
 
-      {/* LISTA */}
-      <FlatList
-        data={reportes}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.list}
-      />
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Mis reportes</Text>
+        <Text style={styles.headerSub}>
+          {reportes.length} reporte{reportes.length !== 1 ? 's' : ''} registrado{reportes.length !== 1 ? 's' : ''}
+        </Text>
+      </View>
 
-      {/* BOTÓN FLOTANTE */}
+      {reportes.length === 0 ? (
+        <View style={styles.empty}>
+          <Ionicons name="document-text-outline" size={64} color="#D1D5DB" />
+          <Text style={styles.emptyTitle}>Sin reportes</Text>
+          <Text style={styles.emptyText}>
+            Aún no has creado ningún reporte. Toca el botón para crear uno.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={reportes}
+          keyExtractor={item => String(item.id_reporte)}
+          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchReportes(); }}
+              colors={['#004C97']}
+            />
+          }
+          renderItem={({ item }) => {
+            const tipo = tipoConfig[item.tipo_reporte] ?? tipoConfig.incidente_sede;
+            const estado = estadoConfig[item.estado] ?? estadoConfig.pendiente;
+            const isExpanded = expandido === item.id_reporte;
+
+            return (
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => setExpandido(isExpanded ? null : item.id_reporte)}
+                activeOpacity={0.85}
+              >
+                {/* FRANJA */}
+                <View style={[styles.franja, { backgroundColor: tipo.color }]} />
+
+                <View style={{ flex: 1 }}>
+                  {/* CABECERA */}
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.iconWrap, { backgroundColor: tipo.bg }]}>
+                      <Ionicons name={tipo.icon as any} size={22} color={tipo.color} />
+                    </View>
+
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.cardTitulo} numberOfLines={1}>{item.titulo}</Text>
+                      <Text style={styles.cardTipo}>{tipo.label}</Text>
+                    </View>
+
+                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                      <View style={[styles.estadoBadge, { backgroundColor: estado.bg }]}>
+                        <Text style={[styles.estadoText, { color: estado.color }]}>
+                          {estado.label}
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16} color="#9CA3AF"
+                      />
+                    </View>
+                  </View>
+
+                  {/* FECHA */}
+                  <View style={styles.fechaRow}>
+                    <Ionicons name="time-outline" size={13} color="#9CA3AF" />
+                    <Text style={styles.fechaText}>{formatFecha(item.fecha_reporte)}</Text>
+                  </View>
+
+                  {/* EXPANDIDO */}
+                  {isExpanded && (
+                    <View style={styles.expandido}>
+                      <Text style={styles.expandLabel}>Descripción</Text>
+                      <Text style={styles.expandText}>{item.descripcion}</Text>
+
+                      {item.respuesta && (
+                        <>
+                          <View style={styles.respuestaDivider} />
+                          <View style={styles.respuestaBox}>
+                            <View style={styles.respuestaHeader}>
+                              <Ionicons name="chatbubble-ellipses-outline" size={16} color="#16A34A" />
+                              <Text style={styles.respuestaLabel}>Respuesta oficial</Text>
+                              {item.fecha_respuesta && (
+                                <Text style={styles.respuestaFecha}>
+                                  {formatFecha(item.fecha_respuesta)}
+                                </Text>
+                              )}
+                            </View>
+                            <Text style={styles.respuestaText}>{item.respuesta}</Text>
+                          </View>
+                        </>
+                      )}
+
+                      {!item.respuesta && (
+                        <View style={styles.sinRespuesta}>
+                          <Ionicons name="hourglass-outline" size={14} color="#9CA3AF" />
+                          <Text style={styles.sinRespuestaText}>Esperando respuesta...</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      )}
+
+      {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
+        onPress={() => router.push('/stackInterno/nuevoReporte')}
         activeOpacity={0.85}
-        onPress={() => router.push("/stackInterno/nuevoReporte")}
       >
-        <FontAwesome name="plus" size={18} color="#FFFFFF" />
+        <Ionicons name="add" size={22} color="#fff" />
         <Text style={styles.fabText}>Nuevo reporte</Text>
       </TouchableOpacity>
     </View>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F4F6F8",
-  },
 
-  list: {
-    padding: 16,
-    paddingBottom: 100, // espacio para el FAB
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F4F6F8' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  header: {
+    backgroundColor: '#004C97',
+    paddingTop: 2,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    marginBottom: 8,
   },
+  headerTitle: { textAlign: 'center', color: '#fff', fontSize: 22, fontWeight: '700' },
+  headerSub: { textAlign: 'center', color: '#E0E7FF', marginTop: 6, fontSize: 14 },
+
+  empty: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    gap: 12, padding: 32,
+  },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+  emptyText: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', lineHeight: 22 },
 
   card: {
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderRadius: 18,
     marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    flexDirection: 'row',
+    overflow: 'hidden',
     elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
 
-  iconBox: {
-    width: 42,
-    height: 42,
+  franja: { width: 5 },
+
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    paddingBottom: 8,
+  },
+
+  iconWrap: {
+    width: 44, height: 44,
     borderRadius: 12,
-    backgroundColor: "#E6EEF7",
-    justifyContent: "center",
-    alignItems: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
 
-  cardInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
+  cardTitulo: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  cardTipo: { fontSize: 12, color: '#6B7280', marginTop: 2 },
 
-  title: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111827",
+  estadoBadge: {
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 99,
   },
+  estadoText: { fontSize: 11, fontWeight: '700' },
 
-  date: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginTop: 4,
+  fechaRow: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: 5, paddingHorizontal: 14, paddingBottom: 12,
   },
+  fechaText: { fontSize: 12, color: '#9CA3AF' },
 
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  expandido: {
+    marginHorizontal: 14,
+    marginBottom: 14,
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
 
-  statusText: {
-    fontSize: 12,
-    fontWeight: "700",
+  expandLabel: { fontSize: 12, fontWeight: '700', color: '#9CA3AF', marginBottom: 4 },
+  expandText: { fontSize: 13, color: '#374151', lineHeight: 20 },
+
+  respuestaDivider: {
+    height: 1, backgroundColor: '#E5E7EB', marginVertical: 12,
   },
 
-  sentBg: {
-    backgroundColor: "#DCFCE7",
+  respuestaBox: { gap: 6 },
+  respuestaHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
+  respuestaLabel: { fontSize: 12, fontWeight: '700', color: '#16A34A', flex: 1 },
+  respuestaFecha: { fontSize: 11, color: '#9CA3AF' },
+  respuestaText: { fontSize: 13, color: '#374151', lineHeight: 20 },
 
-  sentText: {
-    color: "#16A34A",
+  sinRespuesta: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: 6, marginTop: 8,
   },
-
-  pendingBg: {
-    backgroundColor: "#FEF3C7",
-  },
-
-  pendingText: {
-    color: "#F59E0B",
-  },
+  sinRespuestaText: { fontSize: 12, color: '#9CA3AF', fontStyle: 'italic' },
 
   fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    flexDirection: "row",
-    backgroundColor: "#004C97",
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    position: 'absolute',
+    bottom: 24, right: 24,
+    flexDirection: 'row',
+    backgroundColor: '#004C97',
+    paddingHorizontal:20,
+    paddingVertical: 50,
     borderRadius: 30,
-    alignItems: "center",
+    alignItems: 'center',
     gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    elevation: 30,
+    shadowColor: '#004C97',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
   },
-
-  fabText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  fabText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

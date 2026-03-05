@@ -5,51 +5,64 @@ import { useRouter } from 'expo-router';
 import api from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
 
-const LoginScreen = () => {
+const LoginScreen =  () => {
+  
   const router = useRouter();
 
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    try {
-      console.log('📡 Intentando login...');
+ const handleLogin = async () => {
+  console.log("BOTÓN PRESIONADO");
 
-      const response = await api.post('/login', {
-        usuario: usuario,
-        password: password,
-      });
+  try {
+    console.log('BASE URL:', api.defaults.baseURL);
+console.log('BODY:', {
+  usuario,
+  password
+});
+    console.log("Enviando login...");
 
-      console.log('✅ LOGIN OK:', response.data);
+    const response = await api.post('/login', {
+      
+      usuario: usuario.trim(),
+      password: password.trim(),
+    });
 
-      const token = response.data.token;
+    console.log("RESPUESTA COMPLETA:", response.data);
 
-      await SecureStore.setItemAsync('token', token);
+    const token = response.data.token;
+    const user = response.data.usuario;
 
-      router.replace('/(tabs)/home');
-
-    } catch (error: any) {
-       console.log('❌ ERROR COMPLETO:', error);
-  console.log('❌ ERROR RESPONSE:', error?.response);
-  console.log('❌ ERROR DATA:', error?.response?.data);
-
-  const status = error?.response?.status;
-
-  let mensaje = 'Ocurrió un error inesperado. Intenta de nuevo.';
-
-  if (!error?.response) {
-    mensaje = 'No se pudo conectar al servidor. Verifica tu conexión a internet.';
-  } else if (status === 401) {
-    mensaje = 'Usuario o contraseña incorrectos.';
-  } else if (status === 422) {
-    mensaje = 'Por favor verifica los datos ingresados.';
-  } else if (status === 500) {
-    mensaje = 'Error en el servidor. Intenta más tarde.';
-  }
-
-  Alert.alert('Error al iniciar sesión', mensaje);
+    if (!user) {
+      Alert.alert('Error', 'Respuesta inválida del servidor');
+      return;
     }
-  };
+
+    const rol = Number(user.id_rol);
+    console.log("ROL DETECTADO:", rol);
+
+    // ✅ SOLO aprendices pueden entrar aquí
+    if (rol !== 2) {
+      Alert.alert('Acceso denegado', 'Este acceso es solo para aprendices');
+      return; 
+    }
+
+    // ✅ GUARDAR SOLO SI ES APRENDIZ
+    await SecureStore.setItemAsync('token', token);
+    await SecureStore.setItemAsync('user', JSON.stringify(user));
+
+    // 🚀 navegar
+    router.replace('/(stack)/(tabs)/home');
+
+  } catch (error: any) {
+    console.log("ERROR LOGIN COMPLETO:", error);
+    console.log("ERROR RESPONSE:", error?.response?.data);
+    console.log("ERROR STATUS:", error?.response?.status);
+
+    Alert.alert('Error', 'Credenciales incorrectas');
+  }
+};
 
   return (
     <View style={styles.container}>

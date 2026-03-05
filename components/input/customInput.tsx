@@ -7,6 +7,7 @@ interface Props {
   value: string;
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
+  keybordType?:  'email-address' ;
   
 }
 
@@ -16,6 +17,7 @@ const CustomInput: React.FC<Props> = ({
   value,
   onChangeText,
   secureTextEntry,
+  keybordType,
 }) => {
   return (
     <View style={styles.container}>
@@ -27,6 +29,7 @@ const CustomInput: React.FC<Props> = ({
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
+        keyboardType={keybordType}
         placeholderTextColor="#7A7A7A"
       />
     </View>
