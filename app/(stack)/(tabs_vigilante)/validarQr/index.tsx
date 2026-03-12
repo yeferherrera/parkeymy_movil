@@ -1,21 +1,25 @@
-// app/(tabs_vigilante)/validarQr/index.tsx
-// Esta pantalla ES el escáner — no redirige a ningún lado
+
+import api from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert
+  ActivityIndicator, Alert, Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api from '@/app/services/api';
+
 
 interface Articulo {
   id: number;
   nombre: string;
   descripcion: string;
   estado_actual: string;
+  foto_url: string | null; 
 }
 
 interface PreviewData {
@@ -139,21 +143,33 @@ export default function ValidarQrTab() {
 
         <View style={{ flex: 1, padding: 20 }}>
           {preview.articulos.map((art) => (
-            <View key={art.id} style={styles.artCard}>
-              <View style={styles.artIcon}>
-                <Ionicons name="cube-outline" size={22} color="#004C97" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.artNombre}>{art.nombre}</Text>
-                <Text style={styles.artDesc}>{art.descripcion}</Text>
-              </View>
-              <View style={[styles.artEstado, esIngreso ? styles.ingresoBg : styles.salidaBg]}>
-                <Text style={[styles.artEstadoText, { color: esIngreso ? '#16A34A' : '#E74C3C' }]}>
-                  {art.estado_actual}
-                </Text>
-              </View>
-            </View>
-          ))}
+  <View key={art.id} style={styles.artCard}>
+
+    {/* FOTO o ícono */}
+    {art.foto_url ? (
+      <Image
+        source={{ uri: art.foto_url }}
+        style={styles.artFoto}
+        resizeMode="cover"
+      />
+    ) : (
+      <View style={styles.artIcon}>
+        <Ionicons name="cube-outline" size={22} color="#004C97" />
+      </View>
+    )}
+
+    <View style={{ flex: 1 }}>
+      <Text style={styles.artNombre}>{art.nombre}</Text>
+      <Text style={styles.artDesc}>{art.descripcion}</Text>
+    </View>
+
+    <View style={[styles.artEstado, esIngreso ? styles.ingresoBg : styles.salidaBg]}>
+      <Text style={[styles.artEstadoText, { color: esIngreso ? '#16A34A' : '#E74C3C' }]}>
+        {art.estado_actual}
+      </Text>
+    </View>
+  </View>
+))}
 
           <View style={styles.expiracion}>
             <Ionicons name="time-outline" size={14} color="#D97706" />
@@ -289,6 +305,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     gap: 12,
   },
+  artFoto: {
+  width: 52, height: 52,
+  borderRadius: 12,
+  marginRight: 14,
+  flexShrink: 0,
+},
   artIcon: {
     width: 44, height: 44, borderRadius: 12,
     backgroundColor: '#EFF6FF',

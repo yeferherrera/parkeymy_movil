@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
-import React, { useState } from 'react';
-import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
-import api from '@/app/services/api';
-import * as SecureStore from 'expo-secure-store';
+import api from '@/services/api';
+import { storage } from '@/services/storage';
+import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -29,26 +28,34 @@ export default function HomeScreen() {
     } catch (_) {}
   };
 
-  const cerrarSesion = () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro que deseas cerrar sesión?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Cerrar sesión',
-          style: 'destructive',
-          onPress: async () => {
-            try { await api.post('/logout'); } catch (_) {}
-            await SecureStore.deleteItemAsync('token');
-            await SecureStore.deleteItemAsync('user');
-            router.replace('/login');
-          }
+ const cerrarSesion = async () => {
+  if (Platform.OS === 'web') {
+    const confirmado = window.confirm('¿Estás seguro que deseas cerrar sesión?');
+    if (!confirmado) return;
+    try { await api.post('/logout'); } catch (_) {}
+    await storage.deleteItem('token');
+    await storage.deleteItem('user');
+    router.replace('/login');
+    return;
+  }
+   Alert.alert(
+    'Cerrar sesión',
+    '¿Estás seguro que deseas cerrar sesión?',
+    [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Cerrar sesión',
+        style: 'destructive',
+        onPress: async () => {
+          try { await api.post('/logout'); } catch (_) {}
+          await storage.deleteItem('token');
+          await storage.deleteItem('user');
+          router.replace('/login');
         }
-      ]
-    );
-  };
-
+      }
+    ]
+  );
+};
   return (
     <View style={styles.container}>
 

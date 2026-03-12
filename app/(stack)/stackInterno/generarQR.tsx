@@ -1,11 +1,16 @@
+import AppNav from '@/components/ui/nav';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  FlatList, ActivityIndicator, Alert
+  ActivityIndicator, Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import AppNav from '@/components/ui/nav';
-import api from '../../services/api';
+import { Platform } from 'react-native';
+import api from '../../../services/api';
 import { SvgUri } from 'react-native-svg';
 
 type Modo = 'ingreso' | 'salida';
@@ -139,7 +144,16 @@ export default function GenerarQRScreen() {
             </Text>
           </View>
           <Text style={styles.qrLabel}>¡QR generado! Muéstraselo al vigilante</Text>
-          <SvgUri width={260} height={260} uri={qrUrl} />
+          {Platform.OS === 'web' ? (
+  <img
+    src={qrUrl}
+    width={260}
+    height={260}
+    style={{ borderRadius: 12 }}
+  />
+) : (
+  <SvgUri width={260} height={260} uri={qrUrl} />
+)}
           <Text style={styles.qrExpira}>⏱ Expira en 2 horas</Text>
         </View>
       )}

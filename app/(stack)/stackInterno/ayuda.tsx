@@ -37,7 +37,7 @@ export default function AyudaYSoporteScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F4F6F8' }}>
-      <AppNav title="Ayuda" />
+      <AppNav title="" />
 
       {/* ── MODAL DE CONTACTO ── */}
       <Modal

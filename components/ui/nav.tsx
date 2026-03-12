@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as SecureStore from "expo-secure-store";
+import { storage } from "@/services/storage";
 
 interface AppNavProps {
   title: string;
@@ -20,7 +20,7 @@ export default function AppNav({ title }: AppNavProps) {
 
     // Si no hay historial, busca el rol en SecureStore
     try {
-      const userData = await SecureStore.getItemAsync("user");
+      const userData = await storage.getItem("user");
       const parsed = userData ? JSON.parse(userData) : null;
       const rol = Number(parsed?.id_rol);
 

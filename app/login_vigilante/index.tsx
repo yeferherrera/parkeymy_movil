@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
 import CustomInput from '@/components/input/customInput';
-import { useRouter } from 'expo-router';
+import { storage } from '@/services/storage';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../services/api';
-import * as SecureStore from 'expo-secure-store';
-import { Alert } from 'react-native'; 
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import api from '../../services/api';
 
 export default function LoginVigilante() {
   const router = useRouter();
@@ -26,8 +25,8 @@ console.log("Enviando login...");
     const token = response.data.token;
     const user = response.data.usuario;
 
-    await SecureStore.setItemAsync('token', token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
+    await storage.setItem('token', token);
+    await storage.setItem('user', JSON.stringify(user));
 
     const rol = Number(user.id_rol);
     console.log("ROL DETECTADO:", rol);

@@ -1,11 +1,16 @@
+import AppNav from '@/components/ui/nav';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList,
-  ActivityIndicator, Alert, TouchableOpacity, RefreshControl
+  ActivityIndicator, Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import AppNav from '@/components/ui/nav';
-import api from '../../services/api';
+import api from '../../../services/api';
 
 export default function ArticulosFueraScreen() {
   const [articulos, setArticulos] = useState<any[]>([]);

@@ -213,7 +213,7 @@ export default function AyudaVigilanteScreen() {
 
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
           <TouchableOpacity
-            onPress={() => router.push('/(stack)/stackVigilante/escanearQr')}
+            onPress={() => router.push('/validarQr')}
             style={{
               flex: 1,
               backgroundColor: '#D1FAE5',

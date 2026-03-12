@@ -1,9 +1,9 @@
 import CustomButton from "@/components/buttons/CustomButton";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, Text, View, Dimensions, ActivityIndicator, Alert } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, Image, ScrollView, Text, View } from "react-native";
 import AppNav from "../../../components/ui/nav";
-import api from "../../services/api";
+import api from "../../../services/api";
 
 const { width } = Dimensions.get("window");
 

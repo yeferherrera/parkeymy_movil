@@ -1,12 +1,18 @@
-import AppNav from "../../../components/ui/nav";
-import CustomInput from "../../../components/input/customInput";
-import SelectInput from "../../../components/input/selectInput";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, ActivityIndicator
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet, Text, TouchableOpacity, View
 } from "react-native";
-import api from "../../services/api";
+import CustomInput from "../../../components/input/customInput";
+import SelectInput from "../../../components/input/selectInput";
+import AppNav from "../../../components/ui/nav";
+import api from "../../../services/api";
 
 const CATEGORIAS = [
   { label: "Seleccione una categoría", value: "" },
@@ -30,6 +36,29 @@ export default function RegistrarArticuloScreen() {
   const [observaciones, setObservaciones] = useState("");
   const [idCategoria, setIdCategoria] = useState("");
   const [loading, setLoading] = useState(false);
+  const [foto, setFoto] = useState<string | null>(null); // base64
+  const [fotoUri, setFotoUri] = useState<string | null>(null); // preview
+
+  const tomarFoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permiso denegado", "Necesitamos acceso a la cámara para tomar la foto.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.6,
+      base64: true,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setFoto(result.assets[0].base64 ?? null);
+      setFotoUri(result.assets[0].uri);
+    }
+  };
 
   const registrarArticulo = async () => {
     if (!nombre || !descripcion || !idCategoria) {
@@ -39,16 +68,26 @@ export default function RegistrarArticuloScreen() {
 
     setLoading(true);
     try {
-      await api.post('/articulos', {
+      // 1. Registrar artículo
+      const res = await api.post('/articulos', {
         nombre,
         descripcion,
         id_categoria: idCategoria,
         numero_serie: numeroSerie,
-        marca,
-        modelo,
-        color,
-        observaciones,
+        marca, modelo, color, observaciones,
       });
+
+      const idArticulo = res.data.id_articulo;
+
+      // 2. Subir foto si existe
+      if (foto && idArticulo) {
+        try {
+          await api.post(`/articulos/${idArticulo}/foto`, { foto });
+        } catch {
+          // No bloqueamos el registro si falla la foto
+          console.log('Error subiendo foto, artículo registrado sin foto');
+        }
+      }
 
       Alert.alert("¡Éxito!", "Artículo registrado correctamente", [
         { text: "OK", onPress: () => router.back() }
@@ -69,8 +108,35 @@ export default function RegistrarArticuloScreen() {
         <View style={styles.card}>
           <Text style={styles.title}>Información del artículo</Text>
 
-          {/* Campos obligatorios */}
-          <Text style={styles.sectionLabel}>Datos obligatorios</Text>
+          {/* FOTO */}
+          <Text style={styles.sectionLabel}>Foto del artículo</Text>
+
+          <TouchableOpacity
+            style={[styles.fotoBox, fotoUri && styles.fotoBoxConFoto]}
+            onPress={tomarFoto}
+            activeOpacity={0.85}
+          >
+            {fotoUri ? (
+              <>
+                <Image source={{ uri: fotoUri }} style={styles.fotoPreview} />
+                <View style={styles.fotoOverlay}>
+                  <Ionicons name="camera-outline" size={22} color="#fff" />
+                  <Text style={styles.fotoOverlayText}>Cambiar foto</Text>
+                </View>
+              </>
+            ) : (
+              <View style={styles.fotoPlaceholder}>
+                <View style={styles.fotoIconWrap}>
+                  <Ionicons name="camera-outline" size={32} color="#004C97" />
+                </View>
+                <Text style={styles.fotoPlaceholderTitle}>Tomar foto</Text>
+                <Text style={styles.fotoPlaceholderSub}>Opcional — ayuda a identificar el artículo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* DATOS OBLIGATORIOS */}
+          <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Datos obligatorios</Text>
 
           <CustomInput
             label="Nombre del artículo *"
@@ -78,14 +144,12 @@ export default function RegistrarArticuloScreen() {
             value={nombre}
             onChangeText={setNombre}
           />
-
           <CustomInput
             label="Descripción *"
             placeholder="Describe brevemente el artículo"
             value={descripcion}
             onChangeText={setDescripcion}
           />
-
           <SelectInput
             label="Categoría *"
             selectedValue={idCategoria}
@@ -93,43 +157,14 @@ export default function RegistrarArticuloScreen() {
             options={CATEGORIAS}
           />
 
-          {/* Campos opcionales */}
+          {/* DATOS ADICIONALES */}
           <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Datos adicionales</Text>
 
-          <CustomInput
-            label="Marca"
-            placeholder="Ej: Lenovo, Apple, Samsung"
-            value={marca}
-            onChangeText={setMarca}
-          />
-
-          <CustomInput
-            label="Modelo"
-            placeholder="Ej: ThinkPad T14"
-            value={modelo}
-            onChangeText={setModelo}
-          />
-
-          <CustomInput
-            label="Color"
-            placeholder="Ej: Negro, Plateado"
-            value={color}
-            onChangeText={setColor}
-          />
-
-          <CustomInput
-            label="Número de serie"
-            placeholder="Ej: SN-LEN-2026-001"
-            value={numeroSerie}
-            onChangeText={setNumeroSerie}
-          />
-
-          <CustomInput
-            label="Observaciones"
-            placeholder="Alguna observación adicional"
-            value={observaciones}
-            onChangeText={setObservaciones}
-          />
+          <CustomInput label="Marca" placeholder="Ej: Lenovo, Apple, Samsung" value={marca} onChangeText={setMarca} />
+          <CustomInput label="Modelo" placeholder="Ej: ThinkPad T14" value={modelo} onChangeText={setModelo} />
+          <CustomInput label="Color" placeholder="Ej: Negro, Plateado" value={color} onChangeText={setColor} />
+          <CustomInput label="Número de serie" placeholder="Ej: SN-LEN-2026-001" value={numeroSerie} onChangeText={setNumeroSerie} />
+          <CustomInput label="Observaciones" placeholder="Alguna observación adicional" value={observaciones} onChangeText={setObservaciones} />
 
           <TouchableOpacity
             style={[styles.button, loading && { opacity: 0.7 }]}
@@ -150,6 +185,7 @@ export default function RegistrarArticuloScreen() {
 
 const styles = StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 32 },
+
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -160,28 +196,80 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 4,
   },
+
   title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#004C97",
-    textAlign: "center",
-    marginBottom: 20,
+    fontSize: 20, fontWeight: "700",
+    color: "#004C97", textAlign: "center", marginBottom: 20,
   },
+
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#888",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 10,
+    fontSize: 13, fontWeight: "700",
+    color: "#888", textTransform: "uppercase",
+    letterSpacing: 0.8, marginBottom: 10,
   },
+
+  // FOTO
+  fotoBox: {
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    overflow: "hidden",
+    height: 160,
+    backgroundColor: "#F8FAFC",
+  },
+
+  fotoBoxConFoto: {
+    borderStyle: "solid",
+    borderColor: "#004C97",
+  },
+
+  fotoPreview: {
+    width: "100%", height: "100%",
+    resizeMode: "cover",
+  },
+
+  fotoOverlay: {
+    position: "absolute",
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+  },
+
+  fotoOverlayText: {
+    color: "#fff", fontSize: 13, fontWeight: "700",
+  },
+
+  fotoPlaceholder: {
+    flex: 1, alignItems: "center",
+    justifyContent: "center", gap: 6,
+  },
+
+  fotoIconWrap: {
+    width: 60, height: 60, borderRadius: 18,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center", justifyContent: "center",
+    marginBottom: 4,
+  },
+
+  fotoPlaceholderTitle: {
+    fontSize: 15, fontWeight: "700", color: "#374151",
+  },
+
+  fotoPlaceholderSub: {
+    fontSize: 12, color: "#9CA3AF", textAlign: "center",
+  },
+
   button: {
     backgroundColor: "#03C04A",
-    height: 52,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
+    height: 52, borderRadius: 14,
+    justifyContent: "center", alignItems: "center",
     marginTop: 18,
   },
+
   buttonText: { color: "#FFFFFF", fontSize: 17, fontWeight: "700" },
 });

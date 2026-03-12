@@ -1,23 +1,30 @@
-import CustomButton from "@/components/buttons/CustomButton";
-import React, { useEffect, useState } from "react";
-import { Image, ScrollView, Text, View, ActivityIndicator, Alert } from "react-native";
-import AppNav from '../../../components/ui/nav';
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import api from "../../services/api";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator, Alert,
+  Image, ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+import AppNav from '../../../components/ui/nav';
+import api from "../../../services/api";
 
 const getEstadoConfig = (estado: string) => {
   switch (estado) {
-    case 'en_sede': return { label: 'En sede', color: '#3CB371' };
-    case 'retirado': return { label: 'Retirado', color: '#F39C12' };
-    case 'registrado': return { label: 'Registrado', color: '#3498DB' };
-    default: return { label: estado, color: '#888' };
+    case 'en_sede':    return { label: 'En sede',     color: '#16A34A', bg: '#D1FAE5' };
+    case 'retirado':   return { label: 'Retirado',    color: '#D97706', bg: '#FEF3C7' };
+    case 'registrado': return { label: 'Registrado',  color: '#004C97', bg: '#EFF6FF' };
+    default:           return { label: estado,         color: '#6B7280', bg: '#F3F4F6' };
   }
 };
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <View style={{ marginBottom: 10 }}>
-    <Text style={{ fontWeight: "700", color: "#004C97", fontSize: 13 }}>{label}</Text>
-    <Text style={{ color: "#444", fontSize: 14, marginTop: 2 }}>{value || "—"}</Text>
+  <View style={styles.infoRow}>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={styles.infoValue}>{value || "—"}</Text>
   </View>
 );
 
@@ -34,7 +41,7 @@ export default function DetalleArticuloScreen() {
     try {
       const response = await api.get(`/articulos/${id}`);
       setArticulo(response.data);
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "No se pudo cargar el artículo");
       router.back();
     } finally {
@@ -51,68 +58,150 @@ export default function DetalleArticuloScreen() {
   }
 
   const estadoConfig = getEstadoConfig(articulo?.estado_articulo);
+  // Busca ruta_foto o url (compatibilidad)
+  const fotoUrl = articulo?.fotos?.[0]?.ruta_foto ?? articulo?.fotos?.[0]?.url ?? null;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#F4F6F8" }}>
+    <View style={{ flex: 1, backgroundColor: "#F4F6F8" }}>
       <AppNav title="Detalle artículo" />
 
-      <View style={{ padding: 16, paddingBottom: 32 }}>
-        <Text style={{ fontSize: 24, fontWeight: "700", color: "#333", marginBottom: 20, marginTop: 10, textAlign: "center" }}>
-          Detalle del Artículo
-        </Text>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        <View style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: 20,
-          padding: 16,
-          marginBottom: 30,
-          borderWidth: 1.5,
-          borderColor: "#D0D4D9",
-          shadowColor: "#000",
-          shadowOpacity: 0.12,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 4 },
-        }}>
-          {/* Foto si existe */}
-          {articulo?.fotos?.length > 0 && (
-            <Image
-              source={{ uri: articulo.fotos[0].url }}
-              style={{ width: "100%", height: 180, borderRadius: 12, marginBottom: 15, resizeMode: "cover" }}
-            />
-          )}
-
-          {/* Estado badge */}
-          <View style={{ alignItems: "flex-start", marginBottom: 16 }}>
-            <View style={{ backgroundColor: estadoConfig.color + "22", paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 }}>
-              <Text style={{ color: estadoConfig.color, fontWeight: "700", fontSize: 13 }}>
+        {/* FOTO */}
+        {fotoUrl ? (
+          <View style={styles.fotoWrap}>
+            <Image source={{ uri: fotoUrl }} style={styles.foto} />
+            <View style={[styles.estadoAbsoluto, { backgroundColor: estadoConfig.bg }]}>
+              <Text style={[styles.estadoText, { color: estadoConfig.color }]}>
                 {estadoConfig.label}
               </Text>
             </View>
           </View>
+        ) : (
+          <View style={styles.fotoPlaceholder}>
+            <Ionicons name="image-outline" size={48} color="#D1D5DB" />
+            <Text style={styles.fotoPlaceholderText}>Sin foto registrada</Text>
+            <View style={[styles.estadoBadge, { backgroundColor: estadoConfig.bg }]}>
+              <Text style={[styles.estadoText, { color: estadoConfig.color }]}>
+                {estadoConfig.label}
+              </Text>
+            </View>
+          </View>
+        )}
 
-          {/* Info */}
-          <InfoRow label="Nombre" value={articulo?.nombre_articulo} />
-          <InfoRow label="Categoría" value={articulo?.categoria?.nombre_categoria} />
-          <InfoRow label="Descripción" value={articulo?.descripcion} />
-          <InfoRow label="Marca" value={articulo?.marca} />
-          <InfoRow label="Modelo" value={articulo?.modelo} />
-          <InfoRow label="Color" value={articulo?.color} />
-          <InfoRow label="N° Serie" value={articulo?.numero_serie} />
-          <InfoRow label="Observaciones" value={articulo?.observaciones} />
+        {/* NOMBRE */}
+        <Text style={styles.nombre}>{articulo?.nombre_articulo}</Text>
+        <Text style={styles.categoria}>{articulo?.categoria?.nombre_categoria}</Text>
+
+        {/* INFO CARD */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Información del artículo</Text>
+
+          <InfoRow label="Descripción"    value={articulo?.descripcion} />
+          <InfoRow label="Marca"          value={articulo?.marca} />
+          <InfoRow label="Modelo"         value={articulo?.modelo} />
+          <InfoRow label="Color"          value={articulo?.color} />
+          <InfoRow label="N° Serie"       value={articulo?.numero_serie} />
+          <InfoRow label="Observaciones"  value={articulo?.observaciones} />
           <InfoRow
             label="Fecha de registro"
-            value={new Date(articulo?.fecha_registro).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
+            value={new Date(articulo?.fecha_registro).toLocaleDateString('es-CO', {
+              year: 'numeric', month: 'long', day: 'numeric'
+            })}
           />
-          <InfoRow
-            label="Última modificación"
-            value={new Date(articulo?.fecha_ultima_modificacion).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
-          />
-
-          <View style={{ marginTop: 20 }}>
-            <CustomButton title="Cerrar" icon="exit" onPress={() => router.back()} />
-          </View>
         </View>
-      </View>
-    </ScrollView>
+
+        {/* ACCIONES */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => router.push({ pathname: '/stackInterno/editarArticulo', params: { id } })}
+          >
+            <Ionicons name="pencil-outline" size={18} color="#fff" />
+            <Text style={styles.editBtnText}>Editar artículo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backBtnText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
+
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  scroll: { paddingBottom: 40 },
+
+  fotoWrap: {
+    width: '100%', height: 240,
+    position: 'relative',
+  },
+  foto: {
+    width: '100%', height: '100%',
+    resizeMode: 'cover',
+  },
+  estadoAbsoluto: {
+    position: 'absolute', top: 16, right: 16,
+    paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 99,
+  },
+
+  fotoPlaceholder: {
+    height: 160,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+  },
+  fotoPlaceholderText: { fontSize: 13, color: '#9CA3AF' },
+
+  estadoBadge: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 99,
+  },
+  estadoText: { fontSize: 12, fontWeight: '700' },
+
+  nombre: {
+    fontSize: 22, fontWeight: '800', color: '#111827',
+    paddingHorizontal: 20, marginTop: 20, textAlign: 'center',
+  },
+  categoria: {
+    fontSize: 14, color: '#6B7280', fontWeight: '600',
+    textAlign: 'center', marginTop: 4, marginBottom: 16,
+  },
+
+  card: {
+    backgroundColor: '#fff', marginHorizontal: 16,
+    borderRadius: 20, padding: 20,
+    elevation: 3, shadowColor: '#000',
+    shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 15, fontWeight: '700', color: '#004C97', marginBottom: 16,
+  },
+
+  infoRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+  },
+  infoLabel: { fontSize: 13, color: '#9CA3AF', fontWeight: '600' },
+  infoValue: { fontSize: 13, color: '#111827', fontWeight: '600', textAlign: 'right', flexShrink: 1, maxWidth: '60%' },
+
+  actions: { paddingHorizontal: 16, gap: 12 },
+
+  editBtn: {
+    backgroundColor: '#004C97', flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 8, paddingVertical: 15, borderRadius: 14,
+  },
+  editBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  backBtn: {
+    backgroundColor: '#F3F4F6', paddingVertical: 14,
+    borderRadius: 14, alignItems: 'center',
+  },
+  backBtnText: { color: '#374151', fontSize: 15, fontWeight: '600' },
+});

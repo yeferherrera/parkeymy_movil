@@ -1,13 +1,16 @@
+import CustomInput from '@/components/input/customInput';
+import AppNav from '@/components/ui/nav';
+import api from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView
+  ActivityIndicator, Alert, ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import AppNav from '@/components/ui/nav';
-import CustomInput from '@/components/input/customInput';
-import api from '@/app/services/api';
-import { useRouter } from 'expo-router';
 
 type Paso = 'solicitar' | 'verificar';
 

@@ -1,13 +1,17 @@
+import CustomInput from '@/components/input/customInput';
+import AppNav from '@/components/ui/nav';
+import api from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, ActivityIndicator, Alert
+  ActivityIndicator, Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import AppNav from '@/components/ui/nav';
-import CustomInput from '@/components/input/customInput';
-import { useRouter } from 'expo-router';
-import api from '@/app/services/api';
 
 const TIPOS = [
   { value: 'daño_articulo',    label: 'Daño en artículo',    icon: 'construct-outline',   color: '#D97706', bg: '#FEF3C7' },

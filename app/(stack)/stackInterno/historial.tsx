@@ -1,11 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList,
-  ActivityIndicator, Alert, TouchableOpacity
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import AppNav from '../../../components/ui/nav';
-import api from '../../services/api';
+import api from '../../../services/api';
 
 const getMovimientoConfig = (tipo: string) => {
   return tipo === 'ingreso'
@@ -35,22 +39,28 @@ export default function HistorialScreen() {
     fetchTodo();
   }, []);
 
-  const fetchTodo = async () => {
-    setLoading(true);
-    try {
-      const [movRes, audRes] = await Promise.all([
-        api.get('/mis-movimientos'),
-        api.get('/mi-auditoria'),
-      ]);
-      setMovimientos(movRes.data.data);
-      setAuditoria(audRes.data);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo cargar el historial');
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchTodo = async () => {
+  setLoading(true);
+  try {
+    const movRes = await api.get('/mis-movimientos');
+    console.log('MOVIMIENTOS RESPONSE:', JSON.stringify(movRes.data));
+    setMovimientos(movRes.data.data ?? []);
+  } catch (error: any) {
+    console.log('ERROR MOVIMIENTOS:', error?.response?.data);
+    setMovimientos([]);
+  }
+//ver errores en auditoria
+  // try {
+  //   const audRes = await api.get('/mi-auditoria');
+  //   console.log('AUDITORIA RESPONSE:', JSON.stringify(audRes.data));
+  //   setAuditoria(audRes.data ?? []);
+  // } catch (error: any) {
+  //   console.log('ERROR AUDITORIA:', error?.response?.data);
+  //   setAuditoria([]);
+  // }
 
+  setLoading(false);
+};
   const toggleExpandir = (id: number) => {
     setExpandido(prev => prev === id ? null : id);
   };

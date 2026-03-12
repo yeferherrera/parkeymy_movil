@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StackScreen } from 'react-native-screens';
 
 export default function StackLayout() {
   return (
@@ -22,6 +23,10 @@ export default function StackLayout() {
       <Stack.Screen name="stackVigilante/validarQr" />
       <Stack.Screen name="stackVigilante/nuevoReporteVigilante" />
       <Stack.Screen name="stackVigilante/ayuda" />
+      <Stack.Screen name="stackVigilante/visitantes" />
+      <Stack.Screen name="stackVigilante/registrarVisitante" />
+      <Stack.Screen name="stackVigilante/detalleVisitante" />
+      <Stack.Screen name="stackVigilante/editarVisitante" />
     </Stack>
   );
 }

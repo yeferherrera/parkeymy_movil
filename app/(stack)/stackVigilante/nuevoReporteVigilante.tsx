@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, ActivityIndicator, Alert, TextInput
-} from 'react-native';
+import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import api from '@/app/services/api';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator, Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 interface Totales {
   total_ingresos: number;

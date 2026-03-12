@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
-import {
-  View, Text, Image, ScrollView, StyleSheet,
-  Dimensions, TouchableOpacity, ActivityIndicator, Alert
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator, Alert,
+  Dimensions,
+  Image, ScrollView, StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 import AppNav from "../../../../components/ui/nav";
-import api from "../../../services/api";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import api from "../../../../services/api";
 
 const { width } = Dimensions.get("window");
 const AVATAR_SIZE = width * 0.34;

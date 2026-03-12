@@ -1,13 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, FlatList,
-  TouchableOpacity, ActivityIndicator,
-  RefreshControl, Alert
-} from 'react-native';
+import AppNav from '@/components/ui/nav';
+import api from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import AppNav from '@/components/ui/nav';
-import api from '@/app/services/api';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 interface Notificacion {
   id_notificacion: number;
