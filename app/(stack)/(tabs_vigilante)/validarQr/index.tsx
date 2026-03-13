@@ -159,6 +159,8 @@ export default function ValidarQrTab() {
     )}
 
     <View style={{ flex: 1 }}>
+      {/* ID */}
+      <Text style={styles.artId}>#{art.id}</Text>
       <Text style={styles.artNombre}>{art.nombre}</Text>
       <Text style={styles.artDesc}>{art.descripcion}</Text>
     </View>
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
   },
   previewTipo: { color: '#fff', fontSize: 20, fontWeight: '800' },
   previewSub: { color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 4 },
-
+artId: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', marginBottom: 2 },
   artCard: {
     backgroundColor: '#fff', borderRadius: 14,
     flexDirection: 'row', alignItems: 'center',

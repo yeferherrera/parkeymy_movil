@@ -195,6 +195,7 @@ const styles = StyleSheet.create({
     height: 65,
     resizeMode: 'contain',
     paddingTop  : 100,
+    borderRadius: 50,
   },
 
   bellBtn: {

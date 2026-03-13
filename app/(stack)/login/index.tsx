@@ -29,17 +29,22 @@ const LoginScreen = () => {
 
       const rol = Number(user.id_rol);
 
-      if (rol !== 2) {
-        alert('Este acceso es solo para aprendices');
-        return;
-      }
+      if (rol !== 2 && rol !== 4) {
+  alert('Este acceso es solo para aprendices e instructores');
+  return;
+}
 
       await storage.setItem('token', token);
       await storage.setItem('user', JSON.stringify(user));
       router.replace('/(stack)/(tabs)/home');
 
     } catch (error: any) {
+      console.log("🔴 Error en login:", error);
       alert('Credenciales incorrectas');
+       console.log("🚨 ERROR COMPLETO:");
+    console.log(error);
+     console.log("📛 Error message:", error?.message);
+    console.log("📛 Error name:", error?.name);
     }
   };
 

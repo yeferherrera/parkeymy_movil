@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Platform,
   Dimensions,
   Image, ScrollView, StyleSheet,
   Text,
@@ -31,9 +31,22 @@ export default function PerfilAprendizScreen() {
       const response = await api.get('/perfil');
       setUsuario(response.data.usuario);
     } catch {
-      Alert.alert('Error', 'No se pudo cargar el perfil');
+      if (Platform.OS === 'web') {
+        window.alert('No se pudo cargar el perfil');
+      } else {
+        Alert.alert('Error', 'No se pudo cargar el perfil');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getRolColor = (nombreRol: string) => {
+    switch (nombreRol?.toLowerCase()) {
+      case 'instructor': return '#7C3AED';
+      case 'aprendiz':   return '#16A34A';
+      case 'vigilante':  return '#D97706';
+      default:           return '#004C97';
     }
   };
 
@@ -44,6 +57,9 @@ export default function PerfilAprendizScreen() {
       </View>
     );
   }
+
+  const nombreRol = usuario?.rol?.nombre_rol ?? '';
+  const rolColor  = getRolColor(nombreRol);
 
   return (
     <View style={styles.screen}>
@@ -56,15 +72,26 @@ export default function PerfilAprendizScreen() {
           <View style={styles.avatarWrapper}>
             <Image
               source={{ uri: "https://i.pravatar.cc/300" }}
-              style={styles.avatar}
+              style={[styles.avatar, { borderColor: rolColor }]}
             />
-            <TouchableOpacity style={styles.editAvatar}>
+            <TouchableOpacity style={[styles.editAvatar, { backgroundColor: rolColor }]}>
               <Ionicons name="camera" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
 
           <Text style={styles.name}>{usuario?.nombres} {usuario?.apellidos}</Text>
-          <Text style={styles.role}>{usuario?.rol?.nombre_rol} — SENA</Text>
+
+          {/* Badge de rol dinámico */}
+          <View style={[styles.rolBadge, { backgroundColor: rolColor + '20' }]}>
+            <Ionicons
+              name={nombreRol.toLowerCase() === 'instructor' ? 'school-outline' : 'person-outline'}
+              size={14}
+              color={rolColor}
+            />
+            <Text style={[styles.rolText, { color: rolColor }]}>
+              {nombreRol} — SENA
+            </Text>
+          </View>
 
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={16} color="#004C97" />
@@ -77,10 +104,10 @@ export default function PerfilAprendizScreen() {
           <Text style={styles.dataTitle}>Información personal</Text>
 
           {[
-            { label: 'Documento', value: `${usuario?.tipo_documento} ${usuario?.numero_documento}` },
-            { label: 'Teléfono', value: usuario?.telefono },
-            { label: 'Cupo de artículos', value: `${usuario?.cupo_maximo_articulos} artículos` },
-            { label: 'Fecha de registro', value: new Date(usuario?.fecha_registro).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) },
+            { label: 'Documento',        value: `${usuario?.tipo_documento} ${usuario?.numero_documento}` },
+            { label: 'Teléfono',         value: usuario?.telefono },
+            { label: 'Cupo de artículos',value: `${usuario?.cupo_maximo_articulos} artículos` },
+            { label: 'Fecha de registro',value: new Date(usuario?.fecha_registro).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) },
           ].map((item, i) => (
             <View key={i} style={[styles.dataRow, i === 3 && { borderBottomWidth: 0 }]}>
               <Text style={styles.dataLabel}>{item.label}</Text>
@@ -88,7 +115,6 @@ export default function PerfilAprendizScreen() {
             </View>
           ))}
 
-          {/* Estado con badge */}
           <View style={[styles.dataRow, { borderBottomWidth: 0 }]}>
             <Text style={styles.dataLabel}>Estado</Text>
             <View style={styles.estadoBadge}>
@@ -173,7 +199,19 @@ const styles = StyleSheet.create({
   },
 
   name: { fontSize: 22, fontWeight: "700", color: "#0F172A", textAlign: "center" },
-  role: { fontSize: 14, fontWeight: "600", color: "#16A34A", marginTop: 4, marginBottom: 10 },
+
+  rolBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 99,
+    marginTop: 6,
+    marginBottom: 12,
+  },
+  rolText: { fontSize: 13, fontWeight: "700" },
+
   infoRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   infoText: { fontSize: 14, color: "#004C97", fontWeight: "500" },
 

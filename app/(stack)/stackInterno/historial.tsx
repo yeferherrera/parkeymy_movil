@@ -39,28 +39,28 @@ export default function HistorialScreen() {
     fetchTodo();
   }, []);
 
- const fetchTodo = async () => {
-  setLoading(true);
-  try {
-    const movRes = await api.get('/mis-movimientos');
-    console.log('MOVIMIENTOS RESPONSE:', JSON.stringify(movRes.data));
-    setMovimientos(movRes.data.data ?? []);
-  } catch (error: any) {
-    console.log('ERROR MOVIMIENTOS:', error?.response?.data);
-    setMovimientos([]);
-  }
-//ver errores en auditoria
-  // try {
-  //   const audRes = await api.get('/mi-auditoria');
-  //   console.log('AUDITORIA RESPONSE:', JSON.stringify(audRes.data));
-  //   setAuditoria(audRes.data ?? []);
-  // } catch (error: any) {
-  //   console.log('ERROR AUDITORIA:', error?.response?.data);
-  //   setAuditoria([]);
-  // }
+  const fetchTodo = async () => {
+    setLoading(true);
 
-  setLoading(false);
-};
+    try {
+      const movRes = await api.get('/mis-movimientos');
+      setMovimientos(movRes.data.data ?? []);
+    } catch (error: any) {
+      console.log('ERROR MOVIMIENTOS:', error?.response?.data);
+      setMovimientos([]);
+    }
+
+    try {
+      const audRes = await api.get('/mi-auditoria');
+      setAuditoria(audRes.data ?? []);
+    } catch (error: any) {
+      console.log('ERROR AUDITORIA:', error?.response?.data);
+      setAuditoria([]);
+    }
+
+    setLoading(false);
+  };
+
   const toggleExpandir = (id: number) => {
     setExpandido(prev => prev === id ? null : id);
   };
@@ -148,6 +148,10 @@ export default function HistorialScreen() {
         ? JSON.parse(item.datos_anteriores) : null;
     } catch (_) {}
 
+    const nombreArticulo = datosNuevos?.nombre_articulo
+      || datosAnteriores?.nombre_articulo
+      || 'Artículo';
+
     return (
       <TouchableOpacity
         style={styles.card}
@@ -162,9 +166,7 @@ export default function HistorialScreen() {
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={[styles.tipoText, { color: config.color }]}>{config.label}</Text>
-              <Text style={styles.fechaText}>
-                {datosNuevos?.nombre_articulo || datosAnteriores?.nombre_articulo || 'Artículo'}
-              </Text>
+              <Text style={styles.fechaText}>{nombreArticulo}</Text>
               <Text style={styles.horaText}>
                 🕐 {fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })} — {fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
               </Text>
@@ -174,7 +176,9 @@ export default function HistorialScreen() {
 
           <View style={styles.subRow}>
             <Ionicons name="hardware-chip-outline" size={14} color="#6B7280" />
-            <Text style={styles.subText}>ID artículo: #{item.id_registro} — IP: {item.ip_address}</Text>
+            <Text style={styles.subText}>
+              Artículo #{item.id_registro} — IP: {item.ip_address}
+            </Text>
           </View>
 
           {isExpanded && (
@@ -218,11 +222,7 @@ export default function HistorialScreen() {
     <View style={styles.container}>
       <AppNav title="Historial" />
 
-      {/* HEADER */}
       <View style={styles.header}>
-        
-    
-        {/* PESTAÑAS */}
         <View style={styles.tabs}>
           <TouchableOpacity
             style={[styles.tab, pestana === 'movimientos' && styles.tabActive]}
@@ -252,20 +252,23 @@ export default function HistorialScreen() {
           <Text style={styles.emptyText}>No hay registros aún</Text>
         </View>
       ) : (
-        <FlatList
-          data={dataActual}
-          keyExtractor={(item) => String(item[keyActual])}
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-          showsVerticalScrollIndicator={false}
-          renderItem={pestana === 'movimientos' ? renderMovimiento : renderAuditoria}
-        />
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={dataActual}
+            keyExtractor={(item) => String(item[keyActual])}
+            contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+            showsVerticalScrollIndicator={false}
+            renderItem={pestana === 'movimientos' ? renderMovimiento : renderAuditoria}
+            style={{ flex: 1 }}
+          />
+        </View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F6F8' },
+  container: { flex: 1, backgroundColor: '#F4F6F8', display: 'flex' as any },
 
   header: {
     backgroundColor: '#004C97',
@@ -276,8 +279,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
     marginBottom: 8,
   },
-
-  headerTitle: { textAlign: 'center', color: '#fff', fontSize: 22, fontWeight: '700' },
 
   tabs: {
     flexDirection: 'row',

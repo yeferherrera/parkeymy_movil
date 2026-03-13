@@ -2,7 +2,7 @@ import axios from 'axios';
 import { storage } from './storage';
 
 const api = axios.create({
-  baseURL: 'http://192.168.0.104:8000/api',
+  baseURL: 'http://10.32.22.57:8000/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
